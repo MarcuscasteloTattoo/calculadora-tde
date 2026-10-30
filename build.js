@@ -1,0 +1,8 @@
+const fs = require('fs');
+const r = f => fs.readFileSync(__dirname + '/src/' + f, 'utf8');
+let html = r('template.html');
+html = html.replace('/*STYLE*/', () => r('styles.css')).replace('/*ENGINE*/', () => r('engine.js')).replace('/*APP*/', () => r('app.js'));
+fs.mkdirSync(__dirname + '/dist', { recursive: true });
+fs.writeFileSync(__dirname + '/dist/calculadora-roi-castelo-ads.html', html);
+fs.writeFileSync(__dirname + '/index.html', '<!doctype html>\n<html lang="pt-BR">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n</head>\n<body>\n' + html + '\n</body>\n</html>\n');
+console.log('ok', html.length);

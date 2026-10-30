@@ -1,0 +1,11 @@
+{
+  "name": "calculadora-roi-castelo-ads",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Calculadora de ROI para tatuadores e estúdios - Castelo Ads",
+  "scripts": {
+    "build": "node build.js",
+    "test": "node --test test/engine.test.js",
+    "test:ui": "python3 test/ui_test.py"
+  }
+}
