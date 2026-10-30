@@ -375,6 +375,7 @@
       stage('check', 'Vendas realizadas', qty(f.sales), 'Conversão geral de ' + rateTxt(f.conversionRate) + ' dos leads', f.sales / base * 100) +
       conn('× ticket médio de <b>' + money(model.ticket) + '</b>') +
       stage('dollar', 'Faturamento projetado', money(model.financial.adRevenue), qty(f.sales) + ' ' + plural(f.sales, 'venda', 'vendas') + ' × ' + money(model.ticket), null, true);
+    $('funnel').insertAdjacentHTML('beforeend', leverPlusHTML('hero-plus funnel-plus')); hydrateIcons($('funnel'));
     $('policy-note').textContent = 'Cálculo com valores esperados; os inteiros exibidos são arredondados apenas no final. Faturamento = vendas inteiras × ticket médio.' +
       (cfg().acquisition.extraConversationsEnabled ? ' As conversas da captação são tratadas como contatos distintos dos leads das campanhas de contatos (sem deduplicação comprovada).' : '');
     if (!f.valid) $('policy-note').textContent = 'O CPL está zerado. Ajuste em Configurações para gerar leads.';
@@ -387,7 +388,7 @@
     var be = fi.breakEvenSales;
     $('kpis').innerHTML =
       kpi('Faturamento bruto projetado', money(fi.adRevenue), qty(fi.adSales) + ' ' + plural(fi.adSales, 'venda', 'vendas') + ' × ' + money(fi.ticket), 'pos') +
-      kpi('ROAS hipotético', xr(fi.roas), 'Faturamento ÷ investimento em anúncios', 'pos', 'Retorno bruto sobre a mídia. ROAS não é lucro.') +
+      kpi('ROAS hipotético', xr(fi.roas), leverPlus() ? 'Só anúncios · retorno total com alavancas ' + xr(leverPlus().ret) : 'Faturamento ÷ investimento em anúncios', 'pos', 'Retorno bruto sobre a mídia. ROAS não é lucro.') +
       kpi('Custo por venda', fi.costPerSale === null ? 'Sem vendas' : money(fi.costPerSale), 'Investimento ÷ vendas dos anúncios') +
       kpi('Custo por lead (CPL)', money(f.costPerLead), 'Referência das campanhas de contatos') +
       kpi('CPL qualificado das campanhas', money(f.contactQualifiedCost), 'Verba de contatos ÷ qualificados dessas campanhas', '', 'Considera só a verba e os leads das campanhas de contatos.') +
@@ -631,6 +632,20 @@
     $('cons').innerHTML = block('Resultado mensal atual (mês 1)', L.now) + block('Mensal após maturação' + (L.maturationMonth > 1 ? ' (mês ' + L.maturationMonth + ')' : ''), L.mature) + acc;
   }
 
+  // Linha "com alavancas": mês após a maturação, sem misturar no ROAS dos anúncios
+  function leverPlus() {
+    var M = model.levers.mature;
+    if (!(M.leverSales > 0)) return null;
+    var cost = model.investment + M.leverCosts, mm = model.levers.maturationMonth;
+    return { month: mm, revenue: M.totalRevenue, sales: M.totalSales, ret: cost > 0 ? M.totalRevenue / cost : null,
+      text: 'Com alavancas, ' + (mm > 1 ? 'a partir do mês ' + mm : 'desde o mês 1') + ': ' };
+  }
+  function leverPlusHTML(cls) {
+    var x = leverPlus(); if (!x) return '';
+    return '<div class="' + cls + '">' + x.text + '<b>' + money0(x.revenue) + '/mês</b> · ' + qty(x.sales) + ' vendas · retorno total <b>' + xr(x.ret) + '</b>' +
+      tip('Faturamento dos anúncios + alavancas ÷ (investimento em anúncios + custos das alavancas). O ROAS acima continua contando só os anúncios.') + '</div>';
+  }
+
   // ------------------------------------------------------------ visualização simplificada
   function renderSimple() {
     var simple = sim.view === 'simple';
@@ -642,7 +657,7 @@
     $('simple-sub').textContent = 'Cenário ' + model.scenario.name + ' · investimento de ' + money(model.investment) + (sim.mode === 'reverse' ? ' (mínimo para a meta)' : '') + ' · ticket de ' + money(model.ticket);
     $('simple-main').innerHTML =
       '<div class="hero"><div class="k">Faturamento projetado</div><div class="big">' + money(fi.adRevenue) + '</div>' +
-      '<div class="s">' + qty(f.sales) + ' ' + plural(f.sales, 'venda', 'vendas') + ' por mês · ROAS de ' + xr(fi.roas) + '</div></div>' +
+      '<div class="s">' + qty(f.sales) + ' ' + plural(f.sales, 'venda', 'vendas') + ' por mês · ROAS dos anúncios de ' + xr(fi.roas) + '</div>' + leverPlusHTML('hero-plus') + '</div>' +
       '<div class="flow">' +
       kpi('Seguidores', qty(f.followers), 'novos por mês') +
       kpi('Leads', qty(f.leads), 'contatos recebidos') +

@@ -333,3 +333,8 @@ td.dim { color: var(--dim); }
 .slever-v { text-align: right; color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .slever-v small { display: block; color: var(--dim); font-weight: 400; font-size: 11px; }
 @media (max-width: 960px) { .slevers { grid-template-columns: minmax(0, 1fr); } }
+
+.hero-plus { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--gold-soft); border: 1px solid var(--gold-line); color: var(--fg); font-size: 13px; line-height: 1.5; }
+.hero-plus b { color: var(--gold); font-variant-numeric: tabular-nums; }
+.hero-plus .tip { margin-left: 6px; vertical-align: -2px; }
+.funnel-plus { margin-top: 10px; }
