@@ -155,7 +155,8 @@ with sync_playwright() as pw:
     check(max(o['page'] for o in ops) == 6, 'PDF com 6 páginas')
     check('Estudio Teste' in texts and 'R$ 23.200,00' in texts and 'Seguidores' in texts and 'Castelo' not in texts, 'PDF com valores da tela')
     (OUT / 'pdf_ops.json').write_text(json.dumps(ops))
-    p.click('#btn-pdf'); p.wait_for_timeout(300)
+    with p.expect_download() as dl: p.click('#btn-pdf')
+    check(not dl.value.suggested_filename.endswith('-resumo.pdf'), 'botão baixa o PDF completo na completa')
     check('castelo' not in p.content().lower().replace('castelo-roi:config:v1', '').replace('castelo-roi:sim:v1', ''), 'nenhuma menção à Castelo na página')
 
     # visualização simplificada
@@ -177,6 +178,12 @@ with sync_playwright() as pw:
     check('R$ 23.200,00' in sc and '+R$ 18.850,00' in sc, 'Com TDE e faturamento extra somam as alavancas')
     m = model(p); check(m['financial']['adRevenue'] == 20300 and m['total']['revenue'] == 23200, 'anúncios continuam separados no motor')
     p.click('#seg-months-simple [data-months="6"]'); check('6 meses' in p.inner_text('#simple-proj'), 'período na simplificada')
+    sops = p.evaluate("() => window.__tde.buildPdf('simple').__ops")
+    stexts = ' | '.join(o['t'] for o in sops if o['op'] == 'text').replace('\xa0', ' ')
+    check(max(o['page'] for o in sops) == 2 and 'Resumo da projeção' in stexts and 'R$ 23.200,00' in stexts and 'Audiência e aquisição' not in stexts, 'PDF resumido de 2 páginas na simplificada')
+    (OUT / 'pdf_simple_ops.json').write_text(json.dumps(sops))
+    with p.expect_download() as dl: p.click('#btn-pdf')
+    check(dl.value.suggested_filename.endswith('-resumo.pdf'), 'botão baixa o PDF resumido na simplificada')
     p.screenshot(path=str(OUT / 'simple.png'), full_page=True)
     p.reload(); p.wait_for_timeout(300)
     check(p.is_visible('#simple-results'), 'visualização escolhida persiste')

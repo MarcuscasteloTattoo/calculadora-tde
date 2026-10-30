@@ -993,13 +993,14 @@
     if (!window.jspdf || !window.jspdf.jsPDF) { toast('A biblioteca de PDF não carregou. Verifique a conexão e recarregue a página.'); return; }
     var btn = $('btn-pdf'); btn.disabled = true;
     try {
-      var doc = buildPdf(model, sim);
+      var simple = sim.view === 'simple';
+      var doc = buildPdf(model, sim, simple ? 'simple' : 'full');
       var slug = (sim.name || 'prospect').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'prospect';
-      saveFile('proposta-tatuador-de-elite-' + slug + '.pdf', doc.output('blob'), 'application/pdf').then(function () { btn.disabled = false; });
+      saveFile('proposta-tatuador-de-elite-' + slug + (simple ? '-resumo' : '') + '.pdf', doc.output('blob'), 'application/pdf').then(function () { btn.disabled = false; });
     } catch (e) { btn.disabled = false; toast('Não foi possível gerar o PDF.'); if (window.console) console.error(e); }
   }
 
-  function buildPdf(m, s) {
+  function buildPdf(m, s, variant) {
     var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
     var INK = [8, 8, 8], GOLD = [229, 179, 53], GDARK = [168, 125, 28], LEVER = [184, 138, 34], GRAY = [110, 110, 110], LINE = [226, 226, 226], TINT = [250, 246, 235], RED = [196, 72, 72];
     var DARK = [8, 8, 8], CARD = [20, 20, 20], BORDER = [41, 41, 41], SOFT = [163, 163, 163], MID = [92, 92, 92];
@@ -1067,6 +1068,7 @@
     });
     font('normal', 9, SOFT); T_(15, 262, 'Tatuador de Elite · ' + dateTxt);
 
+    if (variant === 'simple') { simplePage(); } else {
     // ---- 2. Audiência e aquisição
     doc.addPage(); header('Audiência e aquisição', 'Distribuição da verba, seguidores e leads');
     y = section(46, 'Distribuição do investimento: ' + money(f.investment) + ' por mês');
@@ -1234,6 +1236,47 @@
       ['Honorários / custos adicionais', (m.fin.includeAgencyFee ? money(fi.agencyFee) : 'Não incluídos') + ' / ' + money(fi.otherCosts)]
     ], { rh: 6.8 });
 
+    }
+
+    // ---- Resumo (visualização simplificada): uma página com os números principais
+    function simplePage() {
+      var TT = m.total, W = c.withLevers;
+      doc.addPage(); header('Resumo da projeção', 'Cenário ' + m.scenario.name + ' · ' + money(m.investment) + '/mês · ticket ' + money(m.ticket));
+      y = section(46, 'Resultado projetado por mês');
+      doc.setFillColor.apply(doc, DARK); doc.roundedRect(15, y, 180, TT.active ? 34 : 28, 2.5, 2.5, 'F');
+      font('normal', 8, SOFT); T_(21, y + 8, TT.active ? 'FATURAMENTO PROJETADO COM ALAVANCAS' : 'FATURAMENTO PROJETADO');
+      font('bold', 24, GOLD); T_(21, y + 19, money(TT.revenue));
+      font('normal', 8.5, [230, 230, 230]); T_(21, y + 25.5, qty(TT.sales) + ' vendas por mês · ' + (TT.active ? 'ROAS total ' + xr(TT.totalReturn) + ' (anúncios: ' + xr(fi.roas) + ')' : 'ROAS ' + xr(fi.roas)));
+      if (TT.active) { font('normal', 7.5, SOFT); T_(21, y + 30.5, money0(fi.adRevenue) + ' anúncios + ' + money0(TT.leverRevenue) + ' alavancas (a partir do mês ' + TT.month + ')'); }
+      y += (TT.active ? 34 : 28) + 4;
+      y = boxes(y, [['Seguidores', qty(f.followers), 'novos por mês'], ['Leads', qty(f.leads), 'contatos recebidos'],
+        ['Qualificados', qty(f.qualified), rateTxt(f.qualificationRate) + ' dos leads'], ['Vendas', qty(TT.sales), TT.active ? qty(f.sales) + ' anúncios + ' + qty(TT.leverSales) + ' alavancas' : rateTxt(f.closeRate) + ' de fechamento', GDARK]], 4, 43.5, 22, 2.33);
+      y = section(y + 6, 'Sem Método TDE x Com Método TDE');
+      doc.setFillColor(238, 238, 236); doc.setDrawColor.apply(doc, LINE); doc.setLineWidth(0.2); doc.roundedRect(15, y, 89, 26, 2, 2, 'FD');
+      font('normal', 7.5, GRAY); T_(19, y + 6.5, 'Sem Método TDE');
+      font('bold', 15, INK); T_(19, y + 15.5, money(c.base.fin.adRevenue));
+      font('normal', 7.2, GRAY); T_(19, y + 22, qty(c.base.funnel.sales) + ' vendas · ROAS ' + xr(c.base.fin.roas));
+      doc.setFillColor.apply(doc, DARK); doc.setDrawColor.apply(doc, GOLD); doc.setLineWidth(0.4); doc.roundedRect(106, y, 89, 26, 2, 2, 'FD');
+      font('normal', 7.5, GOLD); T_(110, y + 6.5, 'Com Método TDE · ' + m.scenario.name);
+      font('bold', 15, GOLD); T_(110, y + 15.5, money(W.improvedRevenue));
+      font('normal', 7.2, SOFT); T_(110, y + 22, qty(W.improvedSales) + ' vendas · ' + (TT.active ? 'ROAS total ' : 'ROAS ') + xr(W.improvedReturn));
+      y += 28;
+      y = boxes(y, [['Faturamento extra por mês', signedMoney(W.incrementalRevenue), signedQty(W.extraSales) + ' vendas' + (TT.active ? ' · inclui alavancas' : ''), GDARK],
+        ['Ganho de eficiência comercial', c.conversionRelativePct === null ? '-' : (c.conversionRelativePct > 0 ? '+' : '') + pct(c.conversionRelativePct, 0), rateTxt(c.conversionBase) + ' > ' + rateTxt(c.conversionImproved) + ' de conversão', GDARK]], 2, 89, 22, 2);
+      y = section(y + 6, 'Alavancas adicionais');
+      var act = m.levers.list.filter(function (l) { return !!s.leversEnabled[l.id]; });
+      if (!act.length) { font('normal', 8.5, GRAY); T_(15, y + 2, 'Nenhuma alavanca ativada nesta simulação.'); y += 8; }
+      else {
+        y = table(15, y, [{ h: 'Alavanca', w: 70, align: 'left' }, { h: 'Regra', w: 60 }, { h: 'Em ' + P.months + ' meses', w: 50 }], act.map(function (l) {
+          var tt = T.levers.filter(function (x) { return x.id === l.id; })[0];
+          return [l.name, '+' + qty(l.salesPerMonth) + ' x ' + money0(l.ticket) + ' após ' + Math.round(l.maturationMonths) + ' m', qty(tt.sales) + ' vendas · ' + money0(tt.revenue)];
+        }), { rh: 7 });
+      }
+      y = section(y + 8, 'Projeção acumulada em ' + P.months + ' meses');
+      boxes(y, [['Faturamento total', money(T.totalRevenue), T.leverRevenue > 0 ? 'Anúncios + alavancas' : 'Somente anúncios', GDARK], ['Vendas', qty(T.totalSales), T.leverSales > 0 ? qty(T.adSales) + ' + ' + qty(T.leverSales) + ' alavancas' : 'Somente anúncios'],
+        ['Investimento em anúncios', money(T.investment), s.projection.growthEnabled ? 'Com crescimento mensal' : 'Constante'], ['ROAS acumulado', xr(T.roas), 'Anúncios no período', GDARK]], 4, 43.5, 22, 2.33);
+    }
+
     var pages = doc.getNumberOfPages();
     for (var pg = 1; pg <= pages; pg++) {
       doc.setPage(pg);
@@ -1252,5 +1295,5 @@
   bindChartTip();
   syncInputs();
   recompute();
-  window.__tde = { get model() { return model; }, get sim() { return sim; }, get config() { return config; }, summaryText: summaryText, buildPdf: function () { return buildPdf(model, sim); } };
+  window.__tde = { get model() { return model; }, get sim() { return sim; }, get config() { return config; }, summaryText: summaryText, buildPdf: function (v) { return buildPdf(model, sim, v || 'full'); } };
 })();
