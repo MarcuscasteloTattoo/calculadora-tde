@@ -127,9 +127,22 @@
       d.view = 'full';
     }
     if (!E.findScenario(config, d.scenarioId)) d.scenarioId = config.defaults.scenarioId;
+    // versões anteriores podiam "travar" o valor das alavancas sem querer: limpa uma única vez
+    if (s.leverTicketsVersion !== 2) { d.leverTickets = {}; d.leverTicketsVersion = 2; }
+    dropFollowingOverrides(d, d.ticket);
     return d;
   }
   function cfg() { return draft || config; }
+  // Valores de alavanca iguais ao ticket médio não são "manuais": voltam a acompanhar o ticket médio.
+  function dropFollowingOverrides(target, ticket) {
+    var lt = target.leverTickets || {};
+    Object.keys(lt).forEach(function (k) { if (!(lt[k] > 0) || Math.abs(lt[k] - ticket) < 0.005) delete lt[k]; });
+    target.leverTickets = lt;
+  }
+  function setMainTicket(v) {
+    dropFollowingOverrides(sim, sim.ticket);
+    sim.ticket = v;
+  }
 
   // ------------------------------------------------------------ utilidades de DOM
   function $(id) { return document.getElementById(id); }
@@ -206,7 +219,7 @@
   function bindStatic() {
     $('in-name').addEventListener('input', function (e) { sim.name = e.target.value.slice(0, 80); store(K_SIM, sim); });
     bindNumInput($('in-investment'), $('err-investment'), 'money', function () { return sim.investment; }, function (v) { sim.investment = v; });
-    bindNumInput($('in-ticket'), $('err-ticket'), 'money', function () { return sim.ticket; }, function (v) { sim.ticket = v; });
+    bindNumInput($('in-ticket'), $('err-ticket'), 'money', function () { return sim.ticket; }, function (v) { setMainTicket(v); });
     bindNumInput($('in-target'), $('err-target'), function () { return sim.reverseType === 'sales' ? 'num' : 'money'; }, function () { return sim.reverseTarget; }, function (v) { sim.reverseTarget = v; });
     bindNumInput($('in-share-followers'), $('err-share-followers'), 'pct', function () { return sim.followersShare; }, function (v) {
       sim.followersShare = v; if (document.activeElement !== $('in-share-contacts')) $('in-share-contacts').value = fmtInput('pct', 1 - v);
@@ -247,7 +260,8 @@
       var r = validate('money', el.value);
       el.classList.toggle('bad', !!r.error);
       if (r.error) return;
-      if (r.value > 0) sim.leverTickets[id] = r.value; else delete sim.leverTickets[id];
+      // valor igual ao ticket médio = continua acompanhando o ticket médio
+      if (r.value > 0 && Math.abs(r.value - sim.ticket) > 0.004) sim.leverTickets[id] = r.value; else delete sim.leverTickets[id];
       recompute();
     });
     $('levers').addEventListener('focusin', function (e) { var el = e.target; if (el.hasAttribute && el.hasAttribute('data-lever-ticket')) setTimeout(function () { try { el.select(); } catch (x) {} }, 0); });

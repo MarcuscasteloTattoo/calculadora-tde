@@ -222,3 +222,8 @@ test('alavanca 02 se chama Ferramentas Google, inclusive em configurações anti
   const n = E.normalizeConfig({ version: 2, levers: [{ id: 'prospeccao', name: 'Prospecção Ativa', salesPerMonth: 2, maturationMonths: 3, description: 'x' }] });
   assert.equal(n.levers[0].name, 'Ferramentas Google'); assert.equal(n.levers[0].salesPerMonth, 2);
 });
+
+test('valor de alavanca igual ao ticket médio continua acompanhando o ticket', () => {
+  const m = run({ ticket: 1000, leverTickets: { social: 1000, indicacoes: 800 } });
+  assert.equal(m.levers.list[1].ticketSource, 'main'); assert.equal(m.levers.list[2].ticket, 800);
+});

@@ -125,6 +125,14 @@ with sync_playwright() as pw:
     p.click('[data-lever-ticket-reset="social"]'); m = model(p)
     check(m['levers']['list'][1]['ticket'] == 1800, 'voltar a usar o ticket médio')
     typ(p, '#in-ticket', '1450'); p.locator('#in-ticket').blur()
+    # valor digitado igual ao ticket não "trava" a alavanca
+    typ(p, '#lt-indicacoes', '1450'); p.locator('#lt-indicacoes').blur()
+    typ(p, '#in-ticket', '1000'); p.locator('#in-ticket').blur(); m = model(p)
+    check(all(l['ticket'] == 1000 for l in m['levers']['list']) and p.input_value('#lt-indicacoes') == '1.000,00', 'ticket 1.000: todas as alavancas acompanham')
+    typ(p, '#lt-social', '700'); typ(p, '#in-ticket', '1200'); p.locator('#in-ticket').blur(); m = model(p)
+    check(m['levers']['list'][1]['ticket'] == 700 and m['levers']['list'][2]['ticket'] == 1200, 'valor manual diferente é mantido; as demais acompanham')
+    p.click('[data-lever-ticket-reset="social"]')
+    typ(p, '#in-ticket', '1450'); p.locator('#in-ticket').blur()
 
     # projeção
     p.click('[data-months="12"]'); m = model(p); check(len(m['projection']['rows']) == 12, '12 meses')

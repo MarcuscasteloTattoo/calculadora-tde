@@ -140,7 +140,7 @@
       mode: 'standard', reverseType: 'revenue', reverseTarget: 20000,
       scenarioId: c.defaults.scenarioId,
       leversEnabled: {},
-      leverTickets: {},
+      leverTickets: {}, leverTicketsVersion: 2,
       includeAgencyFee: c.financial.includeAgencyFee,
       projection: clone(c.projection),
       chartMetric: 'revenue',
@@ -420,6 +420,7 @@
     var lt = sim.leverTickets || {};
     var levers = config.levers.map(function (l) {
       var own = nonNeg(lt[l.id]), cfgT = nonNeg(l.ticket);
+      if (Math.abs(own - ticket) < 0.005) own = 0; // igual ao ticket médio: acompanha o ticket médio
       return Object.assign({}, l, { ticket: own > 0 ? own : (cfgT > 0 ? cfgT : ticket), ticketSource: own > 0 ? 'simulation' : (cfgT > 0 ? 'config' : 'main') });
     });
     var maxMat = levers.reduce(function (a, l) { return enabled[l.id] ? Math.max(a, Math.round(nonNeg(l.maturationMonths))) : a; }, 0);
