@@ -338,6 +338,17 @@ td.dim { color: var(--dim); }
 .lt-src { font-size: 12px; color: var(--dim); }
 .lt-src .linkbtn { font-size: 12px; }
 
+.slevers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.slever { display: flex; justify-content: space-between; align-items: center; gap: 10px; border: 1px solid var(--line-2); background: var(--card-2); border-radius: var(--r-md); padding: 14px; transition: border-color .15s; }
+.slever.on { border-color: var(--gold-line); }
+.slever .switch { align-items: flex-start; }
+.slever-t { display: flex; flex-direction: column; gap: 2px; }
+.slever-t b { font-weight: 600; font-size: 13.5px; }
+.slever-t small { color: var(--muted); font-size: 11.5px; }
+.slever-v { text-align: right; color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.slever-v small { display: block; color: var(--dim); font-weight: 400; font-size: 11px; }
+@media (max-width: 960px) { .slevers { grid-template-columns: minmax(0, 1fr); } }
+
 </style>
 
 <div class="wrap" id="app">
@@ -537,6 +548,11 @@ td.dim { color: var(--dim); }
   <section class="card simple-only" aria-labelledby="t-simple-cmp">
     <div class="card-h"><div><h2 id="t-simple-cmp">Sem Método TDE x Com Método TDE</h2><p>Mesmo investimento e ticket nos dois lados. Comparativo hipotético.</p></div></div>
     <div id="simple-cmp"></div>
+  </section>
+
+  <section class="card simple-only" aria-labelledby="t-simple-lev">
+    <div class="card-h"><div><h2 id="t-simple-lev">Alavancas adicionais</h2><p>Ative as estratégias que entram na projeção. Elas não contam no ROAS dos anúncios.</p></div></div>
+    <div class="slevers" id="simple-levers"></div>
   </section>
 
   <section class="card simple-only" aria-labelledby="t-simple-proj">
@@ -1263,6 +1279,7 @@ td.dim { color: var(--dim); }
     $('sw-extra').addEventListener('click', function () { setConfigFlag('acquisition.extraConversationsEnabled', !config.acquisition.extraConversationsEnabled); });
     $('seg-months').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.projection.months = Number(b.getAttribute('data-months')); recompute(); });
     $('seg-months-simple').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.projection.months = Number(b.getAttribute('data-months')); recompute(); });
+    $('simple-levers').addEventListener('click', function (e) { var sw = e.target.closest('[data-lever]'); if (!sw) return; var id = sw.getAttribute('data-lever'); sim.leversEnabled[id] = !sim.leversEnabled[id]; recompute(); });
     $('seg-view').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.view = b.getAttribute('data-view'); recompute(); });
     $('sw-growth').addEventListener('click', function () { sim.projection.growthEnabled = !sim.projection.growthEnabled; recompute(); });
     $('sw-ramp').addEventListener('click', function () { sim.projection.rampEnabled = !sim.projection.rampEnabled; recompute(); });
@@ -1683,6 +1700,14 @@ td.dim { color: var(--dim); }
       '<div class="side com"><h3>Com Método TDE · ' + esc(model.scenario.name) + '</h3><div class="big">' + money(c.improved.fin.adRevenue) + '</div><div class="s">' + qty(c.improved.funnel.sales) + ' ' + plural(c.improved.funnel.sales, 'venda', 'vendas') + ' · ROAS ' + xr(c.improved.fin.roas) + '</div></div></div>' +
       '<div class="gain">' + kpi('Faturamento extra por mês', signedMoney(c.incrementalRevenue), signedQty(c.extraSales) + ' vendas', c.incrementalRevenue >= 0 ? 'pos' : 'neg') +
       kpi('Ganho de eficiência comercial', c.conversionRelativePct === null ? '—' : (c.conversionRelativePct > 0 ? '+' : '') + pct(c.conversionRelativePct, 0), rateTxt(c.conversionBase) + ' → ' + rateTxt(c.conversionImproved) + ' de conversão', c.conversionDeltaPP >= 0 ? 'pos' : 'neg') + '</div>';
+    var sl = model.levers.list.map(function (l) {
+      var on = !!sim.leversEnabled[l.id], mat = Math.round(l.maturationMonths);
+      var tot = T.levers.filter(function (x) { return x.id === l.id; })[0] || { sales: 0, revenue: 0 };
+      return '<div class="slever' + (on ? ' on' : '') + '"><button class="switch" type="button" role="switch" id="sw-slev-' + esc(l.id) + '" data-lever="' + esc(l.id) + '" aria-checked="' + on + '"><span class="track"></span><span class="slever-t"><b>' + esc(l.name) + '</b>' +
+        '<small>+' + qty(l.salesPerMonth) + ' ' + plural(l.salesPerMonth, 'venda', 'vendas') + '/mês de ' + money0(l.ticket) + (mat > 0 ? ' a partir do mês ' + (mat + 1) : '') + '</small></span></button>' +
+        '<div class="slever-v">' + (on ? '+' + money0(tot.revenue) + '<small>em ' + P.months + ' meses</small>' : '<small>Desativada</small>') + '</div></div>';
+    }).join('');
+    setHTML($('simple-levers'), sl);
     $('simple-proj').innerHTML = '<div class="period">' +
       kpi('Faturamento em ' + P.months + ' meses', money(T.totalRevenue), T.leverRevenue > 0 ? money(T.adRevenue) + ' anúncios + ' + money(T.leverRevenue) + ' alavancas' : 'Somente anúncios', 'pos') +
       kpi('Vendas em ' + P.months + ' meses', qty(T.totalSales), T.leverSales > 0 ? qty(T.adSales) + ' anúncios + ' + qty(T.leverSales) + ' alavancas' : 'Somente anúncios') +

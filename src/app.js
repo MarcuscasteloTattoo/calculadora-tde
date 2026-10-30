@@ -233,6 +233,7 @@
     $('sw-extra').addEventListener('click', function () { setConfigFlag('acquisition.extraConversationsEnabled', !config.acquisition.extraConversationsEnabled); });
     $('seg-months').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.projection.months = Number(b.getAttribute('data-months')); recompute(); });
     $('seg-months-simple').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.projection.months = Number(b.getAttribute('data-months')); recompute(); });
+    $('simple-levers').addEventListener('click', function (e) { var sw = e.target.closest('[data-lever]'); if (!sw) return; var id = sw.getAttribute('data-lever'); sim.leversEnabled[id] = !sim.leversEnabled[id]; recompute(); });
     $('seg-view').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.view = b.getAttribute('data-view'); recompute(); });
     $('sw-growth').addEventListener('click', function () { sim.projection.growthEnabled = !sim.projection.growthEnabled; recompute(); });
     $('sw-ramp').addEventListener('click', function () { sim.projection.rampEnabled = !sim.projection.rampEnabled; recompute(); });
@@ -653,6 +654,14 @@
       '<div class="side com"><h3>Com Método TDE · ' + esc(model.scenario.name) + '</h3><div class="big">' + money(c.improved.fin.adRevenue) + '</div><div class="s">' + qty(c.improved.funnel.sales) + ' ' + plural(c.improved.funnel.sales, 'venda', 'vendas') + ' · ROAS ' + xr(c.improved.fin.roas) + '</div></div></div>' +
       '<div class="gain">' + kpi('Faturamento extra por mês', signedMoney(c.incrementalRevenue), signedQty(c.extraSales) + ' vendas', c.incrementalRevenue >= 0 ? 'pos' : 'neg') +
       kpi('Ganho de eficiência comercial', c.conversionRelativePct === null ? '—' : (c.conversionRelativePct > 0 ? '+' : '') + pct(c.conversionRelativePct, 0), rateTxt(c.conversionBase) + ' → ' + rateTxt(c.conversionImproved) + ' de conversão', c.conversionDeltaPP >= 0 ? 'pos' : 'neg') + '</div>';
+    var sl = model.levers.list.map(function (l) {
+      var on = !!sim.leversEnabled[l.id], mat = Math.round(l.maturationMonths);
+      var tot = T.levers.filter(function (x) { return x.id === l.id; })[0] || { sales: 0, revenue: 0 };
+      return '<div class="slever' + (on ? ' on' : '') + '"><button class="switch" type="button" role="switch" id="sw-slev-' + esc(l.id) + '" data-lever="' + esc(l.id) + '" aria-checked="' + on + '"><span class="track"></span><span class="slever-t"><b>' + esc(l.name) + '</b>' +
+        '<small>+' + qty(l.salesPerMonth) + ' ' + plural(l.salesPerMonth, 'venda', 'vendas') + '/mês de ' + money0(l.ticket) + (mat > 0 ? ' a partir do mês ' + (mat + 1) : '') + '</small></span></button>' +
+        '<div class="slever-v">' + (on ? '+' + money0(tot.revenue) + '<small>em ' + P.months + ' meses</small>' : '<small>Desativada</small>') + '</div></div>';
+    }).join('');
+    setHTML($('simple-levers'), sl);
     $('simple-proj').innerHTML = '<div class="period">' +
       kpi('Faturamento em ' + P.months + ' meses', money(T.totalRevenue), T.leverRevenue > 0 ? money(T.adRevenue) + ' anúncios + ' + money(T.leverRevenue) + ' alavancas' : 'Somente anúncios', 'pos') +
       kpi('Vendas em ' + P.months + ' meses', qty(T.totalSales), T.leverSales > 0 ? qty(T.adSales) + ' anúncios + ' + qty(T.leverSales) + ' alavancas' : 'Somente anúncios') +
