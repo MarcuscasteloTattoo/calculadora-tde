@@ -123,6 +123,7 @@
       d.followersShare = config.defaults.followersShare;
       if (s.investment === 1500 && s.ticket === 1500) { d.investment = config.defaults.investment; d.ticket = config.defaults.ticket; }
       if (['revenue', 'investment', 'sales', 'roas', 'compare'].indexOf(d.chartMetric) < 0) d.chartMetric = 'revenue';
+      d.view = 'full';
     }
     if (!E.findScenario(config, d.scenarioId)) d.scenarioId = config.defaults.scenarioId;
     return d;
@@ -157,7 +158,7 @@
   }
   function renderAll() {
     renderModeUI(); renderScenarios(); renderReverse(); renderDistribution(); renderAudience(); renderFunnel();
-    renderKpis(); renderCosts(); renderCompare(); renderProjectionControls(); renderChart(); renderTable(); renderLevers();
+    renderKpis(); renderCosts(); renderCompare(); renderProjectionControls(); renderChart(); renderTable(); renderLevers(); renderSimple();
   }
 
   // ------------------------------------------------------------ entradas
@@ -231,6 +232,8 @@
     $('sw-indirect').addEventListener('click', function () { setConfigFlag('acquisition.indirectFollowersEnabled', !config.acquisition.indirectFollowersEnabled); });
     $('sw-extra').addEventListener('click', function () { setConfigFlag('acquisition.extraConversationsEnabled', !config.acquisition.extraConversationsEnabled); });
     $('seg-months').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.projection.months = Number(b.getAttribute('data-months')); recompute(); });
+    $('seg-months-simple').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.projection.months = Number(b.getAttribute('data-months')); recompute(); });
+    $('seg-view').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.view = b.getAttribute('data-view'); recompute(); });
     $('sw-growth').addEventListener('click', function () { sim.projection.growthEnabled = !sim.projection.growthEnabled; recompute(); });
     $('sw-ramp').addEventListener('click', function () { sim.projection.rampEnabled = !sim.projection.rampEnabled; recompute(); });
     $('seg-metric').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.chartMetric = b.getAttribute('data-metric'); recompute(); });
@@ -256,7 +259,8 @@
       return;
     }
     btn._armed = false; btn.innerHTML = icon('refresh') + 'Nova simulação';
-    sim = E.defaultSim(config);
+    var keepView = sim.view;
+    sim = E.defaultSim(config); sim.view = keepView;
     syncInputs(); recompute(); $('in-name').focus();
     toast('Nova simulação iniciada com os parâmetros padrão salvos.');
   }
@@ -583,6 +587,36 @@
       line('ROAS publicitário', xr(T.roas)) + line('Retorno consolidado ' + tip('Faturamento combinado ÷ custos fixos totais (anúncios, honorários incluídos, outros custos e custos das alavancas).'), xr(T.consolidatedReturn)) +
       line('Resultado consolidado', money(T.totalResult), T.totalResult >= 0 ? 'var(--gold)' : 'var(--red)') + '</div>';
     $('cons').innerHTML = block('Resultado mensal atual (mês 1)', L.now) + block('Mensal após maturação' + (L.maturationMonth > 1 ? ' (mês ' + L.maturationMonth + ')' : ''), L.mature) + acc;
+  }
+
+  // ------------------------------------------------------------ visualização simplificada
+  function renderSimple() {
+    var simple = sim.view === 'simple';
+    $('app').classList.toggle('view-simple', simple);
+    setPressed('seg-view', 'data-view', simple ? 'simple' : 'full');
+    setPressed('seg-months-simple', 'data-months', sim.projection.months === 12 ? 12 : 6);
+    if (!simple) return;
+    var f = model.funnel, fi = model.financial, c = model.compare, T = model.projection.totals, P = model.projection;
+    $('simple-sub').textContent = 'Cenário ' + model.scenario.name + ' · investimento de ' + money(model.investment) + (sim.mode === 'reverse' ? ' (mínimo para a meta)' : '') + ' · ticket de ' + money(model.ticket);
+    $('simple-main').innerHTML =
+      '<div class="hero"><div class="k">Faturamento projetado</div><div class="big">' + money(fi.adRevenue) + '</div>' +
+      '<div class="s">' + qty(f.sales) + ' ' + plural(f.sales, 'venda', 'vendas') + ' por mês · ROAS de ' + xr(fi.roas) + '</div></div>' +
+      '<div class="flow">' +
+      kpi('Seguidores', qty(f.followers), 'novos por mês') +
+      kpi('Leads', qty(f.leads), 'contatos recebidos') +
+      kpi('Qualificados', qty(f.qualified), rateTxt(f.qualificationRate) + ' dos leads') +
+      kpi('Vendas', qty(f.sales), rateTxt(f.closeRate) + ' de fechamento', 'gold') + '</div>' +
+      '<div class="simple-foot"><span>Custo por venda <b>' + (fi.costPerSale === null ? '—' : money(fi.costPerSale)) + '</b></span><span>CPL <b>' + money(f.cpl) + '</b></span><span>Conversão geral <b>' + rateTxt(f.conversionRate) + '</b></span></div>';
+    $('simple-cmp').innerHTML = '<div class="vs">' +
+      '<div class="side"><h3>Sem Método TDE</h3><div class="big">' + money(c.base.fin.adRevenue) + '</div><div class="s">' + qty(c.base.funnel.sales) + ' ' + plural(c.base.funnel.sales, 'venda', 'vendas') + ' · ROAS ' + xr(c.base.fin.roas) + '</div></div>' +
+      '<div class="side com"><h3>Com Método TDE · ' + esc(model.scenario.name) + '</h3><div class="big">' + money(c.improved.fin.adRevenue) + '</div><div class="s">' + qty(c.improved.funnel.sales) + ' ' + plural(c.improved.funnel.sales, 'venda', 'vendas') + ' · ROAS ' + xr(c.improved.fin.roas) + '</div></div></div>' +
+      '<div class="gain">' + kpi('Faturamento extra por mês', signedMoney(c.incrementalRevenue), signedQty(c.extraSales) + ' vendas', c.incrementalRevenue >= 0 ? 'pos' : 'neg') +
+      kpi('Ganho de eficiência comercial', c.conversionRelativePct === null ? '—' : (c.conversionRelativePct > 0 ? '+' : '') + pct(c.conversionRelativePct, 0), rateTxt(c.conversionBase) + ' → ' + rateTxt(c.conversionImproved) + ' de conversão', c.conversionDeltaPP >= 0 ? 'pos' : 'neg') + '</div>';
+    $('simple-proj').innerHTML = '<div class="period">' +
+      kpi('Faturamento em ' + P.months + ' meses', money(T.totalRevenue), T.leverRevenue > 0 ? money(T.adRevenue) + ' anúncios + ' + money(T.leverRevenue) + ' alavancas' : 'Somente anúncios', 'pos') +
+      kpi('Vendas em ' + P.months + ' meses', qty(T.totalSales), T.leverSales > 0 ? qty(T.adSales) + ' anúncios + ' + qty(T.leverSales) + ' alavancas' : 'Somente anúncios') +
+      kpi('Investimento em anúncios', money(T.investment), sim.projection.growthEnabled ? 'Com crescimento mensal' : 'Constante no período') +
+      kpi('ROAS acumulado', xr(T.roas), 'Anúncios no período', 'pos') + '</div>';
   }
 
   // ------------------------------------------------------------ configurações

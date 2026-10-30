@@ -299,6 +299,38 @@ td.dim { color: var(--dim); }
 @media (max-width: 960px) { .kpis.k4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ind-foot { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 640px) { .dist-grid { grid-template-columns: minmax(0, 1fr); } .aud { grid-template-columns: minmax(0, 1fr); } }
 
+/* Visualização simplificada */
+.top { flex-wrap: wrap; }
+.view-toggle { display: flex; align-items: center; gap: 10px; }
+.view-lbl { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); font-weight: 600; }
+#seg-view button[aria-pressed="true"] { background: var(--gold); color: var(--gold-ink); font-weight: 600; }
+.simple-only { display: none; }
+.view-simple .simple-only { display: block; }
+.view-simple .full-only { display: none !important; }
+.hero { border: 1px solid var(--gold-line); background: var(--bg); border-radius: var(--r-md); padding: 22px 22px 18px; }
+.hero .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+.hero .big { font-size: 44px; font-weight: 700; color: var(--gold); letter-spacing: -.02em; line-height: 1.1; margin-top: 6px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.hero .s { color: var(--muted); font-size: 13px; margin-top: 6px; }
+.flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.flow .kpi { text-align: center; }
+.flow .kpi .k { justify-content: center; }
+.flow .kpi .v { font-size: 28px; }
+.flow .kpi.gold .v { color: var(--gold); }
+.simple-foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; color: var(--muted); font-size: 13px; }
+.simple-foot b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.vs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.vs .side { border-radius: var(--r-md); padding: 18px; border: 1px solid var(--line); background: var(--graphite); }
+.vs .side.com { border-color: var(--gold-line); background: var(--bg); }
+.vs .side h3 { margin: 0 0 4px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.vs .side.com h3 { color: var(--gold); }
+.vs .side .big { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.vs .side.com .big { color: var(--gold); }
+.vs .side .s { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.gain { margin-top: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.period { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 960px) { .flow, .period { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .hero .big { font-size: 34px; } .vs, .gain, .period { grid-template-columns: minmax(0, 1fr); } .view-toggle { width: 100%; justify-content: space-between; } }
+
 </style>
 
 <div class="wrap" id="app">
@@ -308,6 +340,13 @@ td.dim { color: var(--dim); }
       <div>
         <h1>Calculadora de ROI</h1>
         <p>Projeção estratégica de investimento e resultados para tatuadores.</p>
+      </div>
+    </div>
+    <div class="view-toggle">
+      <span class="view-lbl">Visualização</span>
+      <div class="seg" role="group" aria-label="Visualização" id="seg-view">
+        <button type="button" data-view="full">Completa</button>
+        <button type="button" data-view="simple">Simplificada</button>
       </div>
     </div>
     <div class="actions">
@@ -369,13 +408,13 @@ td.dim { color: var(--dim); }
             <button class="linkbtn" type="button" id="btn-params"><i data-icon="sliders"></i>Configurar parâmetros</button>
           </div>
           <div class="scen" id="scen-buttons" role="group" aria-label="Cenário"></div>
-          <div class="scen-desc" id="scen-desc"></div>
-          <div class="chips" id="scen-chips"></div>
+          <div class="scen-desc full-only" id="scen-desc"></div>
+          <div class="chips full-only" id="scen-chips"></div>
           <div id="scen-issues"></div>
         </div>
       </section>
 
-      <section class="card" aria-labelledby="t-dist">
+      <section class="card full-only" aria-labelledby="t-dist">
         <div class="card-h"><div><h2 id="t-dist">Distribuição do Investimento</h2><p>Como a verba mensal se divide entre audiência e contatos.</p></div></div>
         <div class="dist-bar" id="dist-bar" aria-hidden="true"></div>
         <div class="dist-grid">
@@ -393,7 +432,7 @@ td.dim { color: var(--dim); }
       </section>
     </div>
 
-    <div class="col">
+    <div class="col full-only">
       <section class="card" aria-labelledby="t-aud">
         <div class="card-h"><div><h2 id="t-aud">Crescimento de Audiência</h2><p>Seguidores estimados por mês com a verba de anúncios.</p></div></div>
         <div id="audience"></div>
@@ -412,9 +451,13 @@ td.dim { color: var(--dim); }
         <p class="policy-note" id="policy-note"></p>
       </section>
     </div>
+    <section class="card simple-only" aria-labelledby="t-simple" id="simple-results">
+      <div class="card-h"><div><h2 id="t-simple">Resultado projetado por mês</h2><p id="simple-sub"></p></div></div>
+      <div id="simple-main"></div>
+    </section>
   </div>
 
-  <section class="card" aria-labelledby="t-kpi">
+  <section class="card full-only" aria-labelledby="t-kpi">
     <div class="card-h"><div><h2 id="t-kpi">Indicadores Financeiros</h2><p>Somente vendas atribuídas aos anúncios, por mês. Alavancas adicionais aparecem no consolidado.</p></div><span id="status-pill"></span></div>
     <div class="kpis k4" id="kpis"></div>
     <div class="ind-foot">
@@ -429,14 +472,14 @@ td.dim { color: var(--dim); }
     </div>
   </section>
 
-  <section class="card" aria-labelledby="t-cmp">
+  <section class="card full-only" aria-labelledby="t-cmp">
     <div class="card-h center-h"><div><h2 id="t-cmp">Comparativo de Resultados</h2><p>Visualize o potencial de crescimento com o Método Tatuador de Elite.</p></div></div>
     <div class="cmp" id="cmp"></div>
     <div class="kpis four" id="cmp-kpis"></div>
     <p class="foot-note">Comparativo hipotético entre premissas configuráveis, com o mesmo investimento e ticket nos dois lados. Não é garantia de resultado nem medição causal do método. Considera apenas o funil dos anúncios.</p>
   </section>
 
-  <section class="card" aria-labelledby="t-proj">
+  <section class="card full-only" aria-labelledby="t-proj">
     <div class="card-h">
       <div><h2 id="t-proj">Projeção temporal</h2><p>Evolução mês a mês do funil, das alavancas e do faturamento.</p></div>
       <div class="seg" role="group" aria-label="Período" id="seg-months">
@@ -477,11 +520,27 @@ td.dim { color: var(--dim); }
     <div class="tbl-wrap"><table id="proj-table"></table></div>
   </section>
 
-  <section class="card" aria-labelledby="t-lev">
+  <section class="card full-only" aria-labelledby="t-lev">
     <div class="card-h center-h"><div><h2 id="t-lev">Alavancas Adicionais</h2><p>Potencialize os resultados combinando diferentes estratégias de geração de negócios.</p></div></div>
     <div class="levers" id="levers"></div>
     <div class="cons" id="cons"></div>
     <p class="foot-note">Vendas das alavancas 02 a 04 não são atribuídas aos anúncios e não entram no ROAS publicitário. Cada alavanca só contribui depois do período de maturação; os custos operacionais contam desde o primeiro mês.</p>
+  </section>
+
+  <section class="card simple-only" aria-labelledby="t-simple-cmp">
+    <div class="card-h"><div><h2 id="t-simple-cmp">Sem Método TDE x Com Método TDE</h2><p>Mesmo investimento e ticket nos dois lados. Comparativo hipotético.</p></div></div>
+    <div id="simple-cmp"></div>
+  </section>
+
+  <section class="card simple-only" aria-labelledby="t-simple-proj">
+    <div class="card-h">
+      <div><h2 id="t-simple-proj">Projeção acumulada</h2><p>Somatório do período, incluindo alavancas ativas.</p></div>
+      <div class="seg" role="group" aria-label="Período" id="seg-months-simple">
+        <button type="button" data-months="6">6 meses</button>
+        <button type="button" data-months="12">12 meses</button>
+      </div>
+    </div>
+    <div id="simple-proj"></div>
   </section>
 
   <section class="cta">
@@ -638,7 +697,8 @@ td.dim { color: var(--dim); }
       leversEnabled: {},
       includeAgencyFee: c.financial.includeAgencyFee,
       projection: clone(c.projection),
-      chartMetric: 'revenue'
+      chartMetric: 'revenue',
+      view: 'full'
     };
   }
 
@@ -1079,6 +1139,7 @@ td.dim { color: var(--dim); }
       d.followersShare = config.defaults.followersShare;
       if (s.investment === 1500 && s.ticket === 1500) { d.investment = config.defaults.investment; d.ticket = config.defaults.ticket; }
       if (['revenue', 'investment', 'sales', 'roas', 'compare'].indexOf(d.chartMetric) < 0) d.chartMetric = 'revenue';
+      d.view = 'full';
     }
     if (!E.findScenario(config, d.scenarioId)) d.scenarioId = config.defaults.scenarioId;
     return d;
@@ -1113,7 +1174,7 @@ td.dim { color: var(--dim); }
   }
   function renderAll() {
     renderModeUI(); renderScenarios(); renderReverse(); renderDistribution(); renderAudience(); renderFunnel();
-    renderKpis(); renderCosts(); renderCompare(); renderProjectionControls(); renderChart(); renderTable(); renderLevers();
+    renderKpis(); renderCosts(); renderCompare(); renderProjectionControls(); renderChart(); renderTable(); renderLevers(); renderSimple();
   }
 
   // ------------------------------------------------------------ entradas
@@ -1187,6 +1248,8 @@ td.dim { color: var(--dim); }
     $('sw-indirect').addEventListener('click', function () { setConfigFlag('acquisition.indirectFollowersEnabled', !config.acquisition.indirectFollowersEnabled); });
     $('sw-extra').addEventListener('click', function () { setConfigFlag('acquisition.extraConversationsEnabled', !config.acquisition.extraConversationsEnabled); });
     $('seg-months').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.projection.months = Number(b.getAttribute('data-months')); recompute(); });
+    $('seg-months-simple').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.projection.months = Number(b.getAttribute('data-months')); recompute(); });
+    $('seg-view').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.view = b.getAttribute('data-view'); recompute(); });
     $('sw-growth').addEventListener('click', function () { sim.projection.growthEnabled = !sim.projection.growthEnabled; recompute(); });
     $('sw-ramp').addEventListener('click', function () { sim.projection.rampEnabled = !sim.projection.rampEnabled; recompute(); });
     $('seg-metric').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.chartMetric = b.getAttribute('data-metric'); recompute(); });
@@ -1212,7 +1275,8 @@ td.dim { color: var(--dim); }
       return;
     }
     btn._armed = false; btn.innerHTML = icon('refresh') + 'Nova simulação';
-    sim = E.defaultSim(config);
+    var keepView = sim.view;
+    sim = E.defaultSim(config); sim.view = keepView;
     syncInputs(); recompute(); $('in-name').focus();
     toast('Nova simulação iniciada com os parâmetros padrão salvos.');
   }
@@ -1539,6 +1603,36 @@ td.dim { color: var(--dim); }
       line('ROAS publicitário', xr(T.roas)) + line('Retorno consolidado ' + tip('Faturamento combinado ÷ custos fixos totais (anúncios, honorários incluídos, outros custos e custos das alavancas).'), xr(T.consolidatedReturn)) +
       line('Resultado consolidado', money(T.totalResult), T.totalResult >= 0 ? 'var(--gold)' : 'var(--red)') + '</div>';
     $('cons').innerHTML = block('Resultado mensal atual (mês 1)', L.now) + block('Mensal após maturação' + (L.maturationMonth > 1 ? ' (mês ' + L.maturationMonth + ')' : ''), L.mature) + acc;
+  }
+
+  // ------------------------------------------------------------ visualização simplificada
+  function renderSimple() {
+    var simple = sim.view === 'simple';
+    $('app').classList.toggle('view-simple', simple);
+    setPressed('seg-view', 'data-view', simple ? 'simple' : 'full');
+    setPressed('seg-months-simple', 'data-months', sim.projection.months === 12 ? 12 : 6);
+    if (!simple) return;
+    var f = model.funnel, fi = model.financial, c = model.compare, T = model.projection.totals, P = model.projection;
+    $('simple-sub').textContent = 'Cenário ' + model.scenario.name + ' · investimento de ' + money(model.investment) + (sim.mode === 'reverse' ? ' (mínimo para a meta)' : '') + ' · ticket de ' + money(model.ticket);
+    $('simple-main').innerHTML =
+      '<div class="hero"><div class="k">Faturamento projetado</div><div class="big">' + money(fi.adRevenue) + '</div>' +
+      '<div class="s">' + qty(f.sales) + ' ' + plural(f.sales, 'venda', 'vendas') + ' por mês · ROAS de ' + xr(fi.roas) + '</div></div>' +
+      '<div class="flow">' +
+      kpi('Seguidores', qty(f.followers), 'novos por mês') +
+      kpi('Leads', qty(f.leads), 'contatos recebidos') +
+      kpi('Qualificados', qty(f.qualified), rateTxt(f.qualificationRate) + ' dos leads') +
+      kpi('Vendas', qty(f.sales), rateTxt(f.closeRate) + ' de fechamento', 'gold') + '</div>' +
+      '<div class="simple-foot"><span>Custo por venda <b>' + (fi.costPerSale === null ? '—' : money(fi.costPerSale)) + '</b></span><span>CPL <b>' + money(f.cpl) + '</b></span><span>Conversão geral <b>' + rateTxt(f.conversionRate) + '</b></span></div>';
+    $('simple-cmp').innerHTML = '<div class="vs">' +
+      '<div class="side"><h3>Sem Método TDE</h3><div class="big">' + money(c.base.fin.adRevenue) + '</div><div class="s">' + qty(c.base.funnel.sales) + ' ' + plural(c.base.funnel.sales, 'venda', 'vendas') + ' · ROAS ' + xr(c.base.fin.roas) + '</div></div>' +
+      '<div class="side com"><h3>Com Método TDE · ' + esc(model.scenario.name) + '</h3><div class="big">' + money(c.improved.fin.adRevenue) + '</div><div class="s">' + qty(c.improved.funnel.sales) + ' ' + plural(c.improved.funnel.sales, 'venda', 'vendas') + ' · ROAS ' + xr(c.improved.fin.roas) + '</div></div></div>' +
+      '<div class="gain">' + kpi('Faturamento extra por mês', signedMoney(c.incrementalRevenue), signedQty(c.extraSales) + ' vendas', c.incrementalRevenue >= 0 ? 'pos' : 'neg') +
+      kpi('Ganho de eficiência comercial', c.conversionRelativePct === null ? '—' : (c.conversionRelativePct > 0 ? '+' : '') + pct(c.conversionRelativePct, 0), rateTxt(c.conversionBase) + ' → ' + rateTxt(c.conversionImproved) + ' de conversão', c.conversionDeltaPP >= 0 ? 'pos' : 'neg') + '</div>';
+    $('simple-proj').innerHTML = '<div class="period">' +
+      kpi('Faturamento em ' + P.months + ' meses', money(T.totalRevenue), T.leverRevenue > 0 ? money(T.adRevenue) + ' anúncios + ' + money(T.leverRevenue) + ' alavancas' : 'Somente anúncios', 'pos') +
+      kpi('Vendas em ' + P.months + ' meses', qty(T.totalSales), T.leverSales > 0 ? qty(T.adSales) + ' anúncios + ' + qty(T.leverSales) + ' alavancas' : 'Somente anúncios') +
+      kpi('Investimento em anúncios', money(T.investment), sim.projection.growthEnabled ? 'Com crescimento mensal' : 'Constante no período') +
+      kpi('ROAS acumulado', xr(T.roas), 'Anúncios no período', 'pos') + '</div>';
   }
 
   // ------------------------------------------------------------ configurações

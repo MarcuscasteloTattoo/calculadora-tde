@@ -141,7 +141,8 @@
       leversEnabled: {},
       includeAgencyFee: c.financial.includeAgencyFee,
       projection: clone(c.projection),
-      chartMetric: 'revenue'
+      chartMetric: 'revenue',
+      view: 'full'
     };
   }
 

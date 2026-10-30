@@ -18,6 +18,13 @@
         <p>Projeção estratégica de investimento e resultados para tatuadores.</p>
       </div>
     </div>
+    <div class="view-toggle">
+      <span class="view-lbl">Visualização</span>
+      <div class="seg" role="group" aria-label="Visualização" id="seg-view">
+        <button type="button" data-view="full">Completa</button>
+        <button type="button" data-view="simple">Simplificada</button>
+      </div>
+    </div>
     <div class="actions">
       <button class="btn" id="btn-copy" type="button"><i data-icon="message"></i>Copiar resumo</button>
       <button class="btn" id="btn-settings" type="button"><i data-icon="sliders"></i>Configurações</button>
@@ -77,13 +84,13 @@
             <button class="linkbtn" type="button" id="btn-params"><i data-icon="sliders"></i>Configurar parâmetros</button>
           </div>
           <div class="scen" id="scen-buttons" role="group" aria-label="Cenário"></div>
-          <div class="scen-desc" id="scen-desc"></div>
-          <div class="chips" id="scen-chips"></div>
+          <div class="scen-desc full-only" id="scen-desc"></div>
+          <div class="chips full-only" id="scen-chips"></div>
           <div id="scen-issues"></div>
         </div>
       </section>
 
-      <section class="card" aria-labelledby="t-dist">
+      <section class="card full-only" aria-labelledby="t-dist">
         <div class="card-h"><div><h2 id="t-dist">Distribuição do Investimento</h2><p>Como a verba mensal se divide entre audiência e contatos.</p></div></div>
         <div class="dist-bar" id="dist-bar" aria-hidden="true"></div>
         <div class="dist-grid">
@@ -101,7 +108,7 @@
       </section>
     </div>
 
-    <div class="col">
+    <div class="col full-only">
       <section class="card" aria-labelledby="t-aud">
         <div class="card-h"><div><h2 id="t-aud">Crescimento de Audiência</h2><p>Seguidores estimados por mês com a verba de anúncios.</p></div></div>
         <div id="audience"></div>
@@ -120,9 +127,13 @@
         <p class="policy-note" id="policy-note"></p>
       </section>
     </div>
+    <section class="card simple-only" aria-labelledby="t-simple" id="simple-results">
+      <div class="card-h"><div><h2 id="t-simple">Resultado projetado por mês</h2><p id="simple-sub"></p></div></div>
+      <div id="simple-main"></div>
+    </section>
   </div>
 
-  <section class="card" aria-labelledby="t-kpi">
+  <section class="card full-only" aria-labelledby="t-kpi">
     <div class="card-h"><div><h2 id="t-kpi">Indicadores Financeiros</h2><p>Somente vendas atribuídas aos anúncios, por mês. Alavancas adicionais aparecem no consolidado.</p></div><span id="status-pill"></span></div>
     <div class="kpis k4" id="kpis"></div>
     <div class="ind-foot">
@@ -137,14 +148,14 @@
     </div>
   </section>
 
-  <section class="card" aria-labelledby="t-cmp">
+  <section class="card full-only" aria-labelledby="t-cmp">
     <div class="card-h center-h"><div><h2 id="t-cmp">Comparativo de Resultados</h2><p>Visualize o potencial de crescimento com o Método Tatuador de Elite.</p></div></div>
     <div class="cmp" id="cmp"></div>
     <div class="kpis four" id="cmp-kpis"></div>
     <p class="foot-note">Comparativo hipotético entre premissas configuráveis, com o mesmo investimento e ticket nos dois lados. Não é garantia de resultado nem medição causal do método. Considera apenas o funil dos anúncios.</p>
   </section>
 
-  <section class="card" aria-labelledby="t-proj">
+  <section class="card full-only" aria-labelledby="t-proj">
     <div class="card-h">
       <div><h2 id="t-proj">Projeção temporal</h2><p>Evolução mês a mês do funil, das alavancas e do faturamento.</p></div>
       <div class="seg" role="group" aria-label="Período" id="seg-months">
@@ -185,11 +196,27 @@
     <div class="tbl-wrap"><table id="proj-table"></table></div>
   </section>
 
-  <section class="card" aria-labelledby="t-lev">
+  <section class="card full-only" aria-labelledby="t-lev">
     <div class="card-h center-h"><div><h2 id="t-lev">Alavancas Adicionais</h2><p>Potencialize os resultados combinando diferentes estratégias de geração de negócios.</p></div></div>
     <div class="levers" id="levers"></div>
     <div class="cons" id="cons"></div>
     <p class="foot-note">Vendas das alavancas 02 a 04 não são atribuídas aos anúncios e não entram no ROAS publicitário. Cada alavanca só contribui depois do período de maturação; os custos operacionais contam desde o primeiro mês.</p>
+  </section>
+
+  <section class="card simple-only" aria-labelledby="t-simple-cmp">
+    <div class="card-h"><div><h2 id="t-simple-cmp">Sem Método TDE x Com Método TDE</h2><p>Mesmo investimento e ticket nos dois lados. Comparativo hipotético.</p></div></div>
+    <div id="simple-cmp"></div>
+  </section>
+
+  <section class="card simple-only" aria-labelledby="t-simple-proj">
+    <div class="card-h">
+      <div><h2 id="t-simple-proj">Projeção acumulada</h2><p>Somatório do período, incluindo alavancas ativas.</p></div>
+      <div class="seg" role="group" aria-label="Período" id="seg-months-simple">
+        <button type="button" data-months="6">6 meses</button>
+        <button type="button" data-months="12">12 meses</button>
+      </div>
+    </div>
+    <div id="simple-proj"></div>
   </section>
 
   <section class="cta">
