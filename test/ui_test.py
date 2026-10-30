@@ -65,10 +65,10 @@ with sync_playwright() as pw:
     p.click('#btn-settings'); p.click('#m-reset'); p.click('#m-reset'); p.click('#m-save'); p.wait_for_timeout(100)
     m = model(p); check(m['scenario']['params']['cpl'] == 18, 'restaurar padrões')
     # nova simulação
-    p.fill('#in-name', 'Lula Tattoo')
+    p.fill('#in-name', 'Estudio Teste')
     p.click('#btn-new'); p.click('#btn-new'); m = model(p)
     check(m['investment'] == 1500 and p.input_value('#in-name') == '', 'nova simulação limpa prospect')
-    p.fill('#in-name', 'Lula Tattoo')
+    p.fill('#in-name', 'Estudio Teste')
 
     # 7. meta reversa
     p.click('[data-mode="reverse"]'); typ(p, '#in-target', '15000'); m = model(p)
@@ -134,14 +134,14 @@ with sync_playwright() as pw:
     ctx.grant_permissions(['clipboard-read', 'clipboard-write'])
     p.click('#btn-copy'); p.wait_for_timeout(100)
     clip = p.evaluate('navigator.clipboard.readText()')
-    check('Lula Tattoo' in clip and 'Funil mensal' in clip, 'resumo para WhatsApp copiado')
+    check('Estudio Teste' in clip and 'Funil mensal' in clip, 'resumo para WhatsApp copiado')
 
     # 15. PDF
     ops = p.evaluate('() => window.__castelo.buildPdf().__ops')
     texts = ' | '.join(o['t'] for o in ops if o['op'] == 'text')
     m = model(p)
     check(max(o['page'] for o in ops) == 5, 'PDF com 5 páginas')
-    check('Lula Tattoo' in texts and 'R$ 4.500,00'.replace(' ', ' ') in texts or 'R$ 4.500,00' in texts.replace(' ', ' '), 'PDF usa dados atuais')
+    check('Estudio Teste' in texts and 'R$ 4.500,00'.replace(' ', ' ') in texts or 'R$ 4.500,00' in texts.replace(' ', ' '), 'PDF usa dados atuais')
     (OUT / 'pdf_ops.json').write_text(json.dumps(ops))
     p.click('#btn-pdf'); p.wait_for_timeout(300)
 
