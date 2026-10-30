@@ -14,6 +14,7 @@
     trend: '<path d="M22 7l-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
     file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/>',
     send: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+    search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
     share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/>',
     users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
     x: '<path d="M18 6 6 18M6 6l12 12"/>',
@@ -566,7 +567,7 @@
       '<tr class="total">' + cols.map(function (c) { return '<td>' + c[2] + '</td>'; }).join('') + '</tr></tbody>';
   }
 
-  var LEVER_ICONS = { prospeccao: 'send', social: 'share', indicacoes: 'users' };
+  var LEVER_ICONS = { prospeccao: 'search', social: 'share', indicacoes: 'users' };
   function leverRule(l, mat) {
     return '+' + qty(l.salesPerMonth) + ' ' + plural(l.salesPerMonth, 'venda', 'vendas') + '/mês ' + (mat > 0 ? 'após ' + mat + ' ' + plural(mat, 'mês', 'meses') + ' de maturação' : 'desde o primeiro mês') +
       (l.monthlyCost > 0 ? ' · custo ' + money0(l.monthlyCost) + '/mês' : '');

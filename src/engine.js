@@ -55,8 +55,8 @@
         extraConversationsEnabled: false, indirectFollowersEnabled: false
       },
       levers: [
-        { id: 'prospeccao', name: 'Prospecção Ativa', salesPerMonth: 1, maturationMonths: 3, ticket: 0, monthlyCost: 0,
-          description: 'Abordagem ativa a clientes antigos, indicados e parcerias locais.' },
+        { id: 'prospeccao', name: 'Ferramentas Google', salesPerMonth: 1, maturationMonths: 3, ticket: 0, monthlyCost: 0,
+          description: 'Google Ads, Perfil da Empresa no Google e presença nas buscas locais.' },
         { id: 'social', name: 'Social Selling', salesPerMonth: 1, maturationMonths: 3, ticket: 0, monthlyCost: 0,
           description: 'Vendas geradas por relacionamento e conteúdo nas redes sociais.' },
         { id: 'indicacoes', name: 'Indicações', salesPerMonth: 1, maturationMonths: 3, ticket: 0, monthlyCost: 0,
@@ -86,10 +86,11 @@
     return d.map(function (def) {
       var s = input.filter(function (l) { return isObj(l) && l.id === def.id; })[0];
       if (!s) return def;
+      var renamed = def.id === 'prospeccao' && /prospec/i.test(String(s.name || '')); // nome antigo passa para Ferramentas Google
       return {
-        id: def.id, name: String(s.name || def.name), salesPerMonth: nonNeg(s.salesPerMonth),
+        id: def.id, name: renamed ? def.name : String(s.name || def.name), salesPerMonth: nonNeg(s.salesPerMonth),
         maturationMonths: Math.round(nonNeg(s.maturationMonths)), ticket: nonNeg(s.ticket), monthlyCost: nonNeg(s.monthlyCost),
-        description: String(s.description || '')
+        description: renamed ? def.description : String(s.description || '')
       };
     });
   }
