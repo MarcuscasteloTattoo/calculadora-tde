@@ -155,7 +155,7 @@ textarea.inp { resize: vertical; min-height: 60px; }
 .panel.sem { border-color: var(--line); background: var(--graphite); }
 .panel.com { border-color: var(--gold-line); background: var(--bg); }
 .panel h3 { margin: 0; font-size: 14px; display: flex; gap: 8px; align-items: center; }
-.panel.sem h3 { color: var(--muted); }
+.panel.sem h3 { color: var(--red); opacity: .85; }
 .panel.com h3 { color: var(--gold); }
 .panel .ps { color: var(--muted); font-size: 12px; margin: 3px 0 12px; }
 .panel dl { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 7px 12px; font-size: 13px; }
@@ -262,6 +262,36 @@ td.dim { color: var(--dim); }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
+/* Distribuição do investimento */
+.dist-bar { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: var(--line-2); margin-bottom: 16px; }
+.dist-bar span { display: block; height: 100%; transition: width .3s ease; }
+.dist-bar .follow { background: #5C5C5C; }
+.dist-bar .contact { background: var(--gold); }
+.dist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.dist-item { display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: 4px 10px; align-items: start; }
+.dist-item .field { margin: 0 !important; }
+.dist-dot { width: 10px; height: 10px; border-radius: 3px; margin-top: 4px; }
+.dist-dot.follow { background: #5C5C5C; }
+.dist-dot.contact { background: var(--gold); }
+.dist-val { grid-column: 2; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.dist-val small { display: block; font-size: 11.5px; color: var(--dim); font-weight: 400; }
+/* Audiência */
+.aud { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.aud .kpi .v { font-size: 20px; }
+.aud-total { margin-top: 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; border: 1px solid var(--line-2); background: var(--card-2); border-radius: var(--r-md); padding: 12px 16px; }
+.aud-total b { font-size: 26px; color: var(--gold); font-variant-numeric: tabular-nums; }
+.aud-meta { color: var(--dim); font-size: 12px; margin-top: 10px; }
+/* Indicadores */
+.kpis.k4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ind-foot { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 14px; }
+.ind-foot .be { margin-top: 0; }
+.opp { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); display: grid; grid-template-columns: 1fr auto; gap: 5px 12px; font-size: 12px; color: var(--dim); }
+.opp dd { margin: 0; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.opp dt { color: var(--dim); }
+.opp-h { grid-column: 1 / -1; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--red); opacity: .8; }
+@media (max-width: 960px) { .kpis.k4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ind-foot { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) { .dist-grid { grid-template-columns: minmax(0, 1fr); } .aud { grid-template-columns: minmax(0, 1fr); } }
+
 </style>
 
 <div class="wrap" id="app">
@@ -291,7 +321,7 @@ td.dim { color: var(--dim); }
         </div>
 
         <div class="field">
-          <span class="lbl">Modo de cálculo <span class="tip" tabindex="0" data-tip="Padrão: você informa o investimento e vê os resultados. Meta reversa: você informa a meta e a calculadora mostra o investimento necessário.">?</span></span>
+          <span class="lbl">Modo de cálculo <span class="tip" tabindex="0" data-tip="Padrão: você informa o investimento e vê os resultados. Meta reversa: você informa a meta de vendas ou de faturamento e a calculadora mostra o investimento mínimo necessário.">?</span></span>
           <div class="seg" role="group" aria-label="Modo de cálculo" id="seg-mode">
             <button type="button" data-mode="standard">Modo padrão</button>
             <button type="button" data-mode="reverse">Meta reversa</button>
@@ -299,7 +329,7 @@ td.dim { color: var(--dim); }
         </div>
 
         <div class="field" id="f-investment">
-          <label class="lbl" for="in-investment">Investimento mensal em anúncios <span class="tip" tabindex="0" data-tip="Valor investido por mês em mídia paga (Meta Ads, Google etc.), sem honorários da agência.">?</span></label>
+          <label class="lbl" for="in-investment">Investimento mensal em anúncios <span class="tip" tabindex="0" data-tip="Valor investido por mês em mídia paga, somando captação de seguidores e geração de contatos.">?</span></label>
           <div class="prefix"><span>R$</span><input class="inp num" id="in-investment" type="text" inputmode="decimal" autocomplete="off"></div>
           <span class="err" id="err-investment"></span>
         </div>
@@ -328,7 +358,7 @@ td.dim { color: var(--dim); }
 
         <div class="field" style="margin-top:18px">
           <div class="row-between">
-            <span class="lbl">Cenário comercial atual <span class="tip" tabindex="0" data-tip="Representa como o estúdio atende e vende hoje. Cada cenário tem CPL e taxas próprias, editáveis.">?</span></span>
+            <span class="lbl">Cenário comercial <span class="tip" tabindex="0" data-tip="Os três cenários usam o mesmo investimento, leads, seguidores e qualificação. Muda apenas a taxa de fechamento comercial.">?</span></span>
             <button class="linkbtn" type="button" id="btn-params"><i data-icon="sliders"></i>Configurar parâmetros</button>
           </div>
           <div class="scen" id="scen-buttons" role="group" aria-label="Cenário"></div>
@@ -338,38 +368,65 @@ td.dim { color: var(--dim); }
         </div>
       </section>
 
-      <section class="card" aria-labelledby="t-costs">
-        <div class="card-h"><div><h2 id="t-costs">Custos considerados</h2><p>Base do ROI, do resultado e do ponto de equilíbrio. Valores definidos em Configurações.</p></div></div>
-        <div id="costs-list"></div>
-        <div style="margin-top:14px" class="row-between">
-          <button class="switch" type="button" role="switch" id="sw-fee" aria-checked="true"><span class="track"></span>Incluir honorários da agência</button>
-          <button class="linkbtn" type="button" id="btn-costs"><i data-icon="sliders"></i>Editar custos</button>
+      <section class="card" aria-labelledby="t-dist">
+        <div class="card-h"><div><h2 id="t-dist">Distribuição do Investimento</h2><p>Como a verba mensal se divide entre audiência e contatos.</p></div></div>
+        <div class="dist-bar" id="dist-bar" aria-hidden="true"></div>
+        <div class="dist-grid">
+          <div class="dist-item">
+            <span class="dist-dot follow"></span>
+            <div class="field"><label class="lbl" for="in-share-followers">Captação de seguidores</label><div class="suffix"><input class="inp num" id="in-share-followers" type="text" inputmode="decimal"><span>%</span></div><span class="err" id="err-share-followers"></span></div>
+            <div class="dist-val" id="dist-followers"></div>
+          </div>
+          <div class="dist-item">
+            <span class="dist-dot contact"></span>
+            <div class="field"><label class="lbl" for="in-share-contacts">Geração de contatos</label><div class="suffix"><input class="inp num" id="in-share-contacts" type="text" inputmode="decimal"><span>%</span></div><span class="err" id="err-share-contacts"></span></div>
+            <div class="dist-val" id="dist-contacts"></div>
+          </div>
         </div>
       </section>
     </div>
 
-    <section class="card" aria-labelledby="t-funnel">
-      <div class="card-h"><div><h2 id="t-funnel">Funil de Conversão do Investimento</h2><p id="funnel-sub">Mês de referência, com a operação madura.</p></div></div>
-      <div class="funnel" id="funnel"></div>
-      <p class="policy-note" id="policy-note"></p>
-    </section>
+    <div class="col">
+      <section class="card" aria-labelledby="t-aud">
+        <div class="card-h"><div><h2 id="t-aud">Crescimento de Audiência</h2><p>Seguidores estimados por mês com a verba de anúncios.</p></div></div>
+        <div id="audience"></div>
+        <div class="row-between" style="margin-top:14px">
+          <button class="switch" type="button" role="switch" id="sw-indirect" aria-checked="true"><span class="track"></span>Incluir seguidores adicionais das campanhas de contatos</button>
+        </div>
+        <p class="policy-note">Seguidores representam crescimento de audiência e relacionamento futuro. Eles não são convertidos em vendas na projeção.</p>
+      </section>
+
+      <section class="card" aria-labelledby="t-funnel">
+        <div class="card-h"><div><h2 id="t-funnel">Funil de Conversão Comercial</h2><p id="funnel-sub">Mês de referência, com a operação madura.</p></div></div>
+        <div class="funnel" id="funnel"></div>
+        <div class="row-between" style="margin-top:14px">
+          <button class="switch" type="button" role="switch" id="sw-extra" aria-checked="true"><span class="track"></span>Incluir conversas adicionais geradas pela captação</button>
+        </div>
+        <p class="policy-note" id="policy-note"></p>
+      </section>
+    </div>
   </div>
 
   <section class="card" aria-labelledby="t-kpi">
-    <div class="card-h"><div><h2 id="t-kpi">Indicadores financeiros</h2><p>Somente vendas atribuídas ao tráfego pago, por mês. Alavancas adicionais aparecem no consolidado abaixo.</p></div><span id="status-pill"></span></div>
-    <div class="kpis" id="kpis"></div>
-    <div class="be" id="breakeven"></div>
+    <div class="card-h"><div><h2 id="t-kpi">Indicadores Financeiros</h2><p>Somente vendas atribuídas aos anúncios, por mês. Alavancas adicionais aparecem no consolidado.</p></div><span id="status-pill"></span></div>
+    <div class="kpis k4" id="kpis"></div>
+    <div class="ind-foot">
+      <div class="box"><div class="be" id="breakeven"></div></div>
+      <div class="box">
+        <div id="costs-list"></div>
+        <div style="margin-top:12px" class="row-between">
+          <button class="switch" type="button" role="switch" id="sw-fee" aria-checked="true"><span class="track"></span>Incluir honorários</button>
+          <button class="linkbtn" type="button" id="btn-costs"><i data-icon="sliders"></i>Editar custos</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="card" aria-labelledby="t-cmp">
     <div class="card-h center-h"><div><h2 id="t-cmp">Comparativo de Resultados</h2><p>Visualize o potencial de crescimento com o Método Tatuador de Elite.</p></div></div>
-    <div class="cmp-ctrl">
-      <div class="field"><label class="lbl" for="sel-base">Cenário base (sem TDE)</label><select class="inp" id="sel-base"></select></div>
-      <div class="field"><label class="lbl" for="sel-imp">Cenário melhorado (com TDE)</label><select class="inp" id="sel-imp"></select></div>
-    </div>
     <div class="cmp" id="cmp"></div>
     <div class="kpis four" id="cmp-kpis"></div>
-    <p class="foot-note">Simulação baseada em premissas configuráveis. Resultados reais podem variar.</p>
+    <p class="foot-note">Comparativo hipotético entre premissas configuráveis, com o mesmo investimento e ticket nos dois lados. Não é garantia de resultado nem medição causal do método. Considera apenas o funil dos anúncios.</p>
   </section>
 
   <section class="card" aria-labelledby="t-proj">
@@ -388,7 +445,7 @@ td.dim { color: var(--dim); }
         </div>
       </div>
       <div class="box">
-        <button class="switch" type="button" role="switch" id="sw-ramp" aria-checked="false"><span class="track"></span>Tempo de rampagem <span class="tip" tabindex="0" data-tip="Nos primeiros meses o atendimento ainda está ajustando. A eficiência multiplica a taxa de agendamento e evolui de forma linear da inicial até a final no período de maturação.">?</span></button>
+        <button class="switch" type="button" role="switch" id="sw-ramp" aria-checked="false"><span class="track"></span>Tempo de rampagem <span class="tip" tabindex="0" data-tip="Nos primeiros meses o atendimento ainda está ajustando. A eficiência multiplica a taxa de fechamento e evolui de forma linear da inicial até a final no período de maturação.">?</span></button>
         <div class="mini-grid">
           <div class="field"><label class="lbl" for="in-ramp">Maturação (meses)</label><input class="inp num" id="in-ramp" type="text" inputmode="numeric"><span class="err" id="err-ramp"></span></div>
           <div class="field"><label class="lbl" for="in-eff-start">Eficiência inicial</label><div class="suffix"><input class="inp num" id="in-eff-start" type="text" inputmode="decimal"><span>%</span></div><span class="err" id="err-eff-start"></span></div>
@@ -399,8 +456,11 @@ td.dim { color: var(--dim); }
     <div class="row-between">
       <div class="seg" role="group" aria-label="Métrica do gráfico" id="seg-metric">
         <button type="button" data-metric="revenue">Faturamento</button>
-        <button type="button" data-metric="investment">Investimento</button>
         <button type="button" data-metric="sales">Vendas</button>
+        <button type="button" data-metric="followers">Seguidores</button>
+        <button type="button" data-metric="leads">Leads</button>
+        <button type="button" data-metric="qualified">Qualificados</button>
+        <button type="button" data-metric="investment">Investimento</button>
         <button type="button" data-metric="roas">ROAS</button>
         <button type="button" data-metric="compare">Comparativo</button>
       </div>
@@ -428,14 +488,18 @@ td.dim { color: var(--dim); }
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-/* Motor central de cálculo — Calculadora de ROI Tatuador de Elite
- * Funções puras. Toda a interface e o PDF consomem computeAll().
+/* Motor central de cálculo — Calculadora de ROI Tatuador de Elite (modelo v2)
+ * Funções puras. Tela, gráficos, tabela, resumo e PDF consomem computeAll().
+ *
+ * Modelo: investimento → distribuição (seguidores x contatos) → seguidores (audiência, nunca vira venda)
+ *         → leads (contatos ÷ CPL + conversas extras da captação) → qualificados → vendas → faturamento.
+ * Valores internos são esperados (fracionários). Quantidades exibidas são inteiras, arredondadas
+ * ao mais próximo apenas no final, com subtotais reconciliados. Faturamento = vendas inteiras × ticket.
  */
 (function (root) {
   'use strict';
 
-  var EPS = 1e-9;
-  var POLICY = { INTEGER: 'integer', EXPECTED: 'expected' };
+  var CONFIG_VERSION = 2;
 
   function num(v, d) {
     var n = typeof v === 'number' ? v : parseFloat(v);
@@ -443,38 +507,42 @@ td.dim { color: var(--dim); }
   }
   function nonNeg(v) { return Math.max(0, num(v)); }
   function rate(v) { return Math.min(1, Math.max(0, num(v))); }
-  function floorQ(x) { return Math.floor(x + EPS); }
-  function ceilQ(x) { return Math.ceil(x - EPS); }
+  function roundQ(x) { return Math.floor(x + 0.5 + 1e-9); }
+  function ceilQ(x) { return Math.ceil(x - 1e-9); }
   function div(a, b) { return (b > 0 && isFinite(a)) ? a / b : null; }
   function round2(x) { return Math.round((x + Number.EPSILON) * 100) / 100; }
   function ceilCents(x) { return Math.ceil(x * 100 - 1e-6) / 100; }
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function isObj(v) { return v && typeof v === 'object' && !Array.isArray(v); }
 
-  // ---------------------------------------------------------------- padrões
+  // ---------------------------------------------------------------- padrões oficiais TDE
   function defaultConfig() {
     return {
-      version: 1,
-      defaults: { investment: 1500, ticket: 1500, cpl: 15, scenarioId: 'conservador' },
-      financial: {
-        variableCostPct: 0,      // % do faturamento (material, taxas de cartão, comissão)
-        agencyFee: 0,            // honorários mensais da agência
-        includeAgencyFee: true,
-        otherCosts: 0,           // outros custos mensais fixos da operação
-        nearBandPct: 0.15        // faixa para "próximo do equilíbrio"
+      version: CONFIG_VERSION,
+      defaults: { investment: 1500, ticket: 1450, followersShare: 0.30, scenarioId: 'moderado' },
+      acquisition: {
+        cpl: 7.5,
+        followerCostMode: 'historical',   // 'historical' = razão exata do histórico; 'manual' = valor abaixo
+        followerCostManual: 1.35,
+        indirectFollowersEnabled: true,
+        extraConversationsEnabled: true,
+        history: { followerInvestment: 1058.58, directFollowers: 784, contactInvestment: 2301.89, indirectFollowers: 161, extraConversations: 21 }
       },
+      commercial: { qualificationRate: 0.30 },
       scenarios: [
-        { id: 'conservador', name: 'Conservador', builtin: true, cpl: 18, scheduleRate: 0.10, showRate: 0.65, closeRate: 0.60,
-          description: 'Operação comercial pouco estruturada, com oportunidades de melhoria no atendimento e no processo de vendas.' },
-        { id: 'moderado', name: 'Moderado', builtin: true, cpl: 15, scheduleRate: 0.15, showRate: 0.75, closeRate: 0.65,
-          description: 'Operação com atendimento organizado, acompanhamento de interessados e processo comercial parcialmente estruturado.' },
-        { id: 'agressivo', name: 'Agressivo', builtin: true, cpl: 12, scheduleRate: 0.20, showRate: 0.85, closeRate: 0.70,
-          description: 'Operação comercial otimizada, com atendimento ágil, follow-up consistente e estratégias de conversão bem executadas.' }
+        { id: 'conservador', name: 'Conservador', builtin: true, closeRate: 0.20,
+          description: 'Tatuador com dificuldades comerciais: demora nas respostas, atendimento pouco estruturado, dificuldade para conduzir orçamentos e ausência de follow-up.' },
+        { id: 'moderado', name: 'Moderado', builtin: true, closeRate: 0.32,
+          description: 'Atendimento organizado e processo comercial razoavelmente estruturado: respostas rápidas, boa apresentação dos trabalhos e follow-up.' },
+        { id: 'agressivo', name: 'Agressivo', builtin: true, closeRate: 0.48,
+          description: 'Operação comercial avançada: atendimento rápido, processo estruturado, follow-up ativo, artista ou vendedor treinado e estratégias de fechamento.' }
       ],
-      castelo: {
-        id: 'castelo', name: 'Método TDE', cpl: 12, scheduleRate: 0.20, showRate: 0.85, closeRate: 0.70,
-        description: 'Campanhas otimizadas e processo comercial estruturado pelo Método Tatuador de Elite.',
-        defaultBaseId: 'selected',   // 'selected' = cenário escolhido no card do prospect
-        defaultImprovedId: 'castelo'
+      independent: {
+        name: 'Sem Método TDE',
+        description: 'Tatuador que investe em anúncios por conta própria, sem planejamento comercial estruturado.',
+        cpl: 12.5, qualificationRate: 0.20, closeRate: 0.20, followerCost: 2.25,
+        followMainDistribution: true, followersShare: 0.30,
+        extraConversationsEnabled: false, indirectFollowersEnabled: false
       },
       levers: [
         { id: 'prospeccao', name: 'Prospecção Ativa', salesPerMonth: 1, maturationMonths: 3, ticket: 0, monthlyCost: 0,
@@ -490,64 +558,76 @@ td.dim { color: var(--dim); }
         rampEnabled: false, rampMonths: 3,
         startEfficiency: 0.70, finalEfficiency: 1.0
       },
-      display: { policy: POLICY.INTEGER }
+      financial: { variableCostPct: 0, agencyFee: 0, includeAgencyFee: true, otherCosts: 0, nearBandPct: 0.15 }
     };
   }
 
-  function isObj(v) { return v && typeof v === 'object' && !Array.isArray(v); }
+  function copyTyped(target, src) {
+    if (!isObj(src)) return;
+    Object.keys(target).forEach(function (k) {
+      if (src[k] === undefined) return;
+      if (isObj(target[k])) copyTyped(target[k], src[k]);
+      else if (typeof src[k] === typeof target[k]) target[k] = src[k];
+    });
+  }
 
-  // Mescla configuração salva com os padrões, sanitizando valores.
+  function normalizeLevers(input, d) {
+    if (!Array.isArray(input)) return d;
+    return d.map(function (def) {
+      var s = input.filter(function (l) { return isObj(l) && l.id === def.id; })[0];
+      if (!s) return def;
+      return {
+        id: def.id, name: String(s.name || def.name), salesPerMonth: nonNeg(s.salesPerMonth),
+        maturationMonths: Math.round(nonNeg(s.maturationMonths)), ticket: nonNeg(s.ticket), monthlyCost: nonNeg(s.monthlyCost),
+        description: String(s.description || '')
+      };
+    });
+  }
+
+  // Mescla configuração salva com os padrões. Configurações da versão anterior (v1)
+  // aproveitam apenas o que continua compatível: alavancas, custos financeiros e preferências de projeção.
   function normalizeConfig(input) {
     var d = defaultConfig();
     if (!isObj(input)) return d;
     var c = clone(d);
-    ['defaults', 'financial', 'projection', 'display'].forEach(function (k) {
-      if (isObj(input[k])) Object.keys(c[k]).forEach(function (f) {
-        if (input[k][f] !== undefined && typeof input[k][f] === typeof c[k][f]) c[k][f] = input[k][f];
-      });
-    });
-    if (isObj(input.castelo)) Object.keys(c.castelo).forEach(function (f) {
-      if (input.castelo[f] !== undefined && typeof input.castelo[f] === typeof c.castelo[f]) c.castelo[f] = input.castelo[f];
-    });
-    c.castelo.id = 'castelo';
-    // Migração da marca anterior: textos padrão antigos passam a usar o nome TDE.
-    if (/castelo/i.test(c.castelo.name)) c.castelo.name = d.castelo.name;
-    if (/castelo/i.test(c.castelo.description)) c.castelo.description = d.castelo.description;
-    if (Array.isArray(input.scenarios) && input.scenarios.length) {
-      c.scenarios = input.scenarios.filter(isObj).map(function (s, i) {
-        return {
-          id: String(s.id || ('custom-' + i)), name: String(s.name || 'Cenário ' + (i + 1)), builtin: !!s.builtin,
-          cpl: nonNeg(s.cpl), scheduleRate: rate(s.scheduleRate), showRate: rate(s.showRate), closeRate: rate(s.closeRate),
-          description: String(s.description || '')
-        };
-      });
-      if (!c.scenarios.length) c.scenarios = d.scenarios;
+    var legacy = input.version !== CONFIG_VERSION;
+    copyTyped(c.financial, input.financial);
+    copyTyped(c.projection, input.projection);
+    c.levers = normalizeLevers(input.levers, d.levers);
+    if (!legacy) {
+      copyTyped(c.defaults, input.defaults);
+      copyTyped(c.acquisition, input.acquisition);
+      copyTyped(c.commercial, input.commercial);
+      copyTyped(c.independent, input.independent);
+      if (Array.isArray(input.scenarios) && input.scenarios.length) {
+        var sc = input.scenarios.filter(isObj).map(function (s, i) {
+          return { id: String(s.id || ('custom-' + i)), name: String(s.name || 'Cenário ' + (i + 1)), builtin: !!s.builtin,
+            closeRate: rate(s.closeRate), description: String(s.description || '') };
+        });
+        if (sc.length) c.scenarios = sc;
+      }
     }
-    if (Array.isArray(input.levers)) {
-      c.levers = d.levers.map(function (def) {
-        var s = input.levers.filter(function (l) { return isObj(l) && l.id === def.id; })[0];
-        if (!s) return def;
-        return {
-          id: def.id, name: String(s.name || def.name), salesPerMonth: nonNeg(s.salesPerMonth),
-          maturationMonths: Math.round(nonNeg(s.maturationMonths)), ticket: nonNeg(s.ticket), monthlyCost: nonNeg(s.monthlyCost),
-          description: String(s.description || '')
-        };
-      });
-    }
-    if (c.display.policy !== POLICY.EXPECTED) c.display.policy = POLICY.INTEGER;
+    // sanitização
     c.projection.months = c.projection.months === 12 ? 12 : 6;
     c.financial.variableCostPct = rate(c.financial.variableCostPct);
     c.financial.nearBandPct = rate(c.financial.nearBandPct);
+    c.defaults.followersShare = rate(c.defaults.followersShare);
+    c.independent.followersShare = rate(c.independent.followersShare);
+    c.commercial.qualificationRate = rate(c.commercial.qualificationRate);
+    c.independent.qualificationRate = rate(c.independent.qualificationRate);
+    c.independent.closeRate = rate(c.independent.closeRate);
+    if (c.acquisition.followerCostMode !== 'manual') c.acquisition.followerCostMode = 'historical';
+    if (!findScenario(c, c.defaults.scenarioId)) c.defaults.scenarioId = c.scenarios[0].id;
     return c;
   }
 
   function defaultSim(config) {
     var c = config || defaultConfig();
     return {
-      name: '', investment: c.defaults.investment, ticket: c.defaults.ticket,
-      mode: 'standard', reverseType: 'revenue', reverseTarget: 10000,
+      version: CONFIG_VERSION,
+      name: '', investment: c.defaults.investment, ticket: c.defaults.ticket, followersShare: c.defaults.followersShare,
+      mode: 'standard', reverseType: 'revenue', reverseTarget: 20000,
       scenarioId: c.defaults.scenarioId,
-      compareBaseId: c.castelo.defaultBaseId, compareImprovedId: c.castelo.defaultImprovedId,
       leversEnabled: {},
       includeAgencyFee: c.financial.includeAgencyFee,
       projection: clone(c.projection),
@@ -555,37 +635,92 @@ td.dim { color: var(--dim); }
     };
   }
 
-  // ---------------------------------------------------------------- funil
-  function sanitizeParams(p) {
-    p = p || {};
-    return { cpl: nonNeg(p.cpl), scheduleRate: rate(p.scheduleRate), showRate: rate(p.showRate), closeRate: rate(p.closeRate) };
-  }
-
-  function paramIssues(p) {
-    var out = [];
-    if (!(num(p.cpl) > 0)) out.push('O CPL precisa ser maior que zero.');
-    ['scheduleRate', 'showRate', 'closeRate'].forEach(function (k) {
-      var v = num(p[k]);
-      if (v > 1) out.push('Taxas não podem passar de 100%.');
-      if (v < 0) out.push('Taxas não podem ser negativas.');
-    });
-    return out.filter(function (v, i, a) { return a.indexOf(v) === i; });
-  }
-
-  // efficiency multiplica a taxa lead → agendamento (qualidade do atendimento).
-  function funnel(investment, params, policy, efficiency) {
-    var inv = nonNeg(investment);
-    var p = sanitizeParams(params);
-    var eff = efficiency === undefined ? 1 : Math.max(0, num(efficiency, 1));
-    var sched = Math.min(1, p.scheduleRate * eff);
-    var q = policy === POLICY.EXPECTED ? function (x) { return x; } : floorQ;
-    var leads = p.cpl > 0 ? q(inv / p.cpl) : 0;
-    var appointments = q(leads * sched);
-    var shows = q(appointments * p.showRate);
-    var sales = q(shows * p.closeRate);
+  // ---------------------------------------------------------------- taxas históricas
+  function historyRates(acq) {
+    var h = acq.history || {};
     return {
-      investment: inv, cpl: p.cpl, leads: leads, appointments: appointments, shows: shows, sales: sales,
-      scheduleRate: sched, showRate: p.showRate, closeRate: p.closeRate, efficiency: eff, valid: p.cpl > 0
+      followerCost: div(nonNeg(h.followerInvestment), nonNeg(h.directFollowers)) || 0,       // R$ por seguidor direto
+      indirectPerReal: div(nonNeg(h.indirectFollowers), nonNeg(h.contactInvestment)) || 0,    // seguidores por R$ em contatos
+      conversationsPerReal: div(nonNeg(h.extraConversations), nonNeg(h.followerInvestment)) || 0 // conversas por R$ em captação
+    };
+  }
+
+  // Parâmetros resolvidos de uma operação (Com TDE = cenário selecionado; Sem TDE = independente)
+  function mainOperation(config, scenario, followersShare) {
+    var a = config.acquisition, hr = historyRates(a);
+    return {
+      label: scenario.name,
+      followersShare: rate(followersShare),
+      cpl: nonNeg(a.cpl),
+      followerCost: a.followerCostMode === 'manual' ? nonNeg(a.followerCostManual) : hr.followerCost,
+      indirectPerReal: a.indirectFollowersEnabled ? hr.indirectPerReal : 0,
+      conversationsPerReal: a.extraConversationsEnabled ? hr.conversationsPerReal : 0,
+      qualificationRate: rate(config.commercial.qualificationRate),
+      closeRate: rate(scenario.closeRate)
+    };
+  }
+  function independentOperation(config, mainShare) {
+    var s = config.independent, hr = historyRates(config.acquisition);
+    return {
+      label: s.name,
+      followersShare: s.followMainDistribution ? rate(mainShare) : rate(s.followersShare),
+      cpl: nonNeg(s.cpl),
+      followerCost: nonNeg(s.followerCost),
+      indirectPerReal: s.indirectFollowersEnabled ? hr.indirectPerReal : 0,
+      conversationsPerReal: s.extraConversationsEnabled ? hr.conversationsPerReal : 0,
+      qualificationRate: rate(s.qualificationRate),
+      closeRate: rate(s.closeRate)
+    };
+  }
+
+  function operationIssues(op, who) {
+    var out = [];
+    if (!(op.cpl > 0)) out.push(who + ': o CPL precisa ser maior que zero para gerar leads.');
+    if (op.followersShare > 0 && !(op.followerCost > 0)) out.push(who + ': o custo por seguidor precisa ser maior que zero.');
+    return out;
+  }
+
+  // ---------------------------------------------------------------- funil
+  // efficiency multiplica a taxa de fechamento (usado na rampagem).
+  function funnel(investment, op, efficiency) {
+    var inv = nonNeg(investment);
+    var eff = efficiency === undefined ? 1 : Math.max(0, num(efficiency, 1));
+    var share = rate(op.followersShare);
+    var followersBudget = round2(inv * share);
+    var contactsBudget = round2(inv - followersBudget);
+
+    var directE = op.followerCost > 0 ? followersBudget / op.followerCost : 0;
+    var indirectE = contactsBudget * nonNeg(op.indirectPerReal);
+    var contactLeadsE = op.cpl > 0 ? contactsBudget / op.cpl : 0;
+    var extraE = followersBudget * nonNeg(op.conversationsPerReal);
+    var leadsE = contactLeadsE + extraE;
+    var q = rate(op.qualificationRate);
+    var close = Math.min(1, rate(op.closeRate) * eff);
+    var qualifiedE = leadsE * q;
+    var salesE = qualifiedE * close;
+
+    // inteiros exibidos, com subtotais reconciliados
+    var followers = roundQ(directE + indirectE);
+    var followersDirect = Math.min(followers, roundQ(directE));
+    var leads = roundQ(leadsE);
+    var contactLeads = Math.min(leads, roundQ(contactLeadsE));
+    var qualified = Math.min(leads, roundQ(qualifiedE));
+    var sales = Math.min(qualified, roundQ(salesE));
+
+    return {
+      investment: inv, followersShare: share, followersBudget: followersBudget, contactsBudget: contactsBudget,
+      cpl: op.cpl, followerCost: op.followerCost,
+      expected: { followersDirect: directE, followersIndirect: indirectE, followers: directE + indirectE,
+        contactLeads: contactLeadsE, extraConversations: extraE, leads: leadsE, qualified: qualifiedE, sales: salesE },
+      followers: followers, followersDirect: followersDirect, followersIndirect: followers - followersDirect,
+      leads: leads, contactLeads: contactLeads, extraConversations: leads - contactLeads,
+      qualified: qualified, sales: sales,
+      notQualified: leads - qualified, qualifiedNotClosed: qualified - sales,
+      qualificationRate: q, closeRate: close, conversionRate: q * close, efficiency: eff,
+      costPerLead: op.cpl > 0 ? op.cpl : null,
+      contactQualifiedCost: contactLeadsE * q > 0 ? contactsBudget / (contactLeadsE * q) : null,
+      globalQualifiedCost: qualifiedE > 0 ? inv / qualifiedE : null,
+      valid: op.cpl > 0
     };
   }
 
@@ -610,6 +745,7 @@ td.dim { color: var(--dim); }
     var adResult = round2(adRevenue - adVariable - adFixed);
     var contribution = t * (1 - v);
     var breakEvenSales = adFixed === 0 ? 0 : (contribution > 0 ? ceilQ(adFixed / contribution) : null);
+    var costsInformed = v > 0;
 
     var totalRevenue = round2(adRevenue + leverRevenue);
     var totalFixed = round2(adFixed + leverCosts);
@@ -618,48 +754,43 @@ td.dim { color: var(--dim); }
 
     return {
       investment: inv, ticket: t, adSales: adSales, adRevenue: adRevenue,
-      variableCostPct: v, agencyFee: fee, otherCosts: other,
-      fixedCosts: adFixed, variableCosts: adVariable, result: adResult,
+      variableCostPct: v, contributionMargin: 1 - v, agencyFee: fee, otherCosts: other,
+      fixedCosts: adFixed, variableCosts: adVariable, result: adResult, costsInformed: costsInformed,
       roas: div(adRevenue, inv),
-      roi: adFixed > 0 ? adResult / adFixed * 100 : null,
-      roiSimplified: !(v > 0),
+      roi: costsInformed && adFixed > 0 ? adResult / adFixed * 100 : null,
       costPerSale: adSales > 0 ? inv / adSales : null,
-      breakEvenSales: breakEvenSales,
+      breakEvenSales: breakEvenSales, breakEvenSimplified: !costsInformed,
       breakEvenProgress: breakEvenSales === null ? 0 : (breakEvenSales === 0 ? 1 : Math.min(1, adSales / breakEvenSales)),
       status: classify(adResult, adFixed, rate(fin.nearBandPct)),
       leverSales: leverSales, leverRevenue: leverRevenue, leverCosts: leverCosts,
       totalSales: adSales + leverSales, totalRevenue: totalRevenue, totalFixed: totalFixed,
       totalVariable: totalVariable, totalResult: totalResult,
-      totalRoi: totalFixed > 0 ? totalResult / totalFixed * 100 : null,
-      consolidatedReturn: div(totalRevenue, totalFixed),
-      totalStatus: classify(totalResult, totalFixed, rate(fin.nearBandPct))
+      consolidatedReturn: div(totalRevenue, totalFixed)
     };
   }
 
   // ---------------------------------------------------------------- meta reversa
+  // Vendas esperadas são lineares no investimento: vendas = investimento × k.
+  function salesPerReal(op, efficiency) {
+    var share = rate(op.followersShare);
+    var eff = efficiency === undefined ? 1 : Math.max(0, num(efficiency, 1));
+    var leadsPerReal = (op.cpl > 0 ? (1 - share) / op.cpl : 0) + share * nonNeg(op.conversationsPerReal);
+    return leadsPerReal * rate(op.qualificationRate) * Math.min(1, rate(op.closeRate) * eff);
+  }
+
   function reverse(o) {
-    var p = sanitizeParams(o.params);
-    var eff = o.efficiency === undefined ? 1 : Math.max(0, num(o.efficiency, 1));
-    var sched = Math.min(1, p.scheduleRate * eff);
     var t = nonNeg(o.ticket), target = nonNeg(o.target);
-    var expected = o.policy === POLICY.EXPECTED;
     var res = { type: o.type, target: target, feasible: true, reason: '' };
-
-    if (!(p.cpl > 0)) return Object.assign(res, { feasible: false, reason: 'O CPL do cenário precisa ser maior que zero.' });
-    if (!(sched > 0 && p.showRate > 0 && p.closeRate > 0))
-      return Object.assign(res, { feasible: false, reason: 'Todas as taxas do cenário precisam ser maiores que zero.' });
-    if (o.type === 'revenue' && !(t > 0))
-      return Object.assign(res, { feasible: false, reason: 'Informe um ticket médio maior que zero.' });
-
-    var sales = o.type === 'revenue' ? target / t : target;
-    var up = expected ? function (x) { return x; } : ceilQ;
-    var S = up(sales), C = up(S / p.closeRate), A = up(C / p.showRate), L = up(A / sched);
-    var inv = expected ? round2(L * p.cpl) : ceilCents(L * p.cpl);
+    var k = salesPerReal(o.op, o.efficiency);
+    if (!(k > 0)) return Object.assign(res, { feasible: false, reason: 'Revise CPL, qualificação e taxa de fechamento: com os valores atuais nenhuma venda é gerada.' });
+    if (o.type === 'revenue' && !(t > 0)) return Object.assign(res, { feasible: false, reason: 'Informe um ticket médio maior que zero.' });
+    var S = o.type === 'revenue' ? ceilQ(target / t) : ceilQ(target);
+    var inv = ceilCents(S / k);
+    // ajuste fino de centavos: a divisão da verba é arredondada em centavos no funil
+    for (var guard = 0; guard < 50 && funnel(inv, o.op, o.efficiency).expected.sales < S - 1e-9; guard++) inv = round2(inv + 0.01);
+    while (inv >= 0.01 && funnel(round2(inv - 0.01), o.op, o.efficiency).expected.sales >= S - 1e-9) inv = round2(inv - 0.01);
     var current = nonNeg(o.currentInvestment);
-    return Object.assign(res, {
-      sales: S, shows: C, appointments: A, leads: L, investment: inv,
-      revenue: round2(S * t), currentInvestment: current, difference: round2(inv - current)
-    });
+    return Object.assign(res, { sales: S, revenue: round2(S * t), investment: inv, currentInvestment: current, difference: round2(inv - current) });
   }
 
   // ---------------------------------------------------------------- alavancas
@@ -678,8 +809,7 @@ td.dim { color: var(--dim); }
     var R = Math.max(1, Math.round(nonNeg(proj.rampMonths)));
     var start = Math.max(0, num(proj.startEfficiency, fin));
     if (R <= 1) return fin;
-    var k = Math.min(1, (month - 1) / (R - 1));
-    return start + (fin - start) * k;
+    return start + (fin - start) * Math.min(1, (month - 1) / (R - 1));
   }
 
   function project(o) {
@@ -691,29 +821,27 @@ td.dim { color: var(--dim); }
     for (var m = 1; m <= months; m++) {
       var inv = round2(nonNeg(o.investment) * Math.pow(1 + g, m - 1));
       var eff = efficiencyAt(m, proj);
-      var f = funnel(inv, o.params, o.policy, eff);
-      var per = levers.map(function (l) {
-        var r = leverMonth(l, !!enabled[l.id], m, o.ticket);
-        r.id = l.id; r.name = l.name; return r;
-      });
+      var f = funnel(inv, o.op, eff);
+      var per = levers.map(function (l) { var r = leverMonth(l, !!enabled[l.id], m, o.ticket); r.id = l.id; r.name = l.name; return r; });
       var lSales = per.reduce(function (a, r) { return a + r.sales; }, 0);
       var lRev = round2(per.reduce(function (a, r) { return a + r.revenue; }, 0));
       var lCost = round2(per.reduce(function (a, r) { return a + r.cost; }, 0));
       var fi = financials({ investment: inv, ticket: o.ticket, adSales: f.sales, leverSales: lSales, leverRevenue: lRev, leverCosts: lCost, fin: o.fin });
       rows.push({
-        month: m, efficiency: eff, investment: inv, leads: f.leads, appointments: f.appointments, shows: f.shows,
+        month: m, efficiency: eff, investment: inv, followers: f.followers, leads: f.leads, qualified: f.qualified,
         adSales: f.sales, leverSales: lSales, totalSales: f.sales + lSales, levers: per,
         adRevenue: fi.adRevenue, leverRevenue: lRev, totalRevenue: fi.totalRevenue, roas: fi.roas,
-        leverCosts: lCost, totalFixed: fi.totalFixed, totalVariable: fi.totalVariable, totalResult: fi.totalResult, adResult: fi.result
+        leverCosts: lCost, totalFixed: fi.totalFixed, totalVariable: fi.totalVariable, totalResult: fi.totalResult
       });
     }
     function sum(k) { return rows.reduce(function (a, r) { return a + r[k]; }, 0); }
+    // Totais = soma dos valores mensais exibidos (sem arredondar de novo).
     var totals = {
-      investment: round2(sum('investment')), leads: sum('leads'), appointments: sum('appointments'), shows: sum('shows'),
+      investment: round2(sum('investment')), followers: sum('followers'), leads: sum('leads'), qualified: sum('qualified'),
       adSales: sum('adSales'), leverSales: sum('leverSales'), totalSales: sum('totalSales'),
       adRevenue: round2(sum('adRevenue')), leverRevenue: round2(sum('leverRevenue')), totalRevenue: round2(sum('totalRevenue')),
       leverCosts: round2(sum('leverCosts')), totalFixed: round2(sum('totalFixed')), totalVariable: round2(sum('totalVariable')),
-      totalResult: round2(sum('totalResult')), adResult: round2(sum('adResult'))
+      totalResult: round2(sum('totalResult'))
     };
     totals.roas = div(totals.adRevenue, totals.investment);
     totals.consolidatedReturn = div(totals.totalRevenue, totals.totalFixed);
@@ -727,93 +855,89 @@ td.dim { color: var(--dim); }
 
   // ---------------------------------------------------------------- comparativo
   function compare(o) {
-    var b = funnel(o.investment, o.base, o.policy, o.efficiency);
-    var i = funnel(o.investment, o.improved, o.policy, o.efficiency);
+    var b = funnel(o.investment, o.base, 1);
+    var i = funnel(o.investment, o.improved, o.efficiency);
     var fb = financials({ investment: o.investment, ticket: o.ticket, adSales: b.sales, fin: o.fin });
     var fi = financials({ investment: o.investment, ticket: o.ticket, adSales: i.sales, fin: o.fin });
-    var bc = nonNeg(o.base.cpl), ic = nonNeg(o.improved.cpl);
+    var bc = b.cpl, ic = i.cpl;
     return {
-      base: { funnel: b, fin: fb }, improved: { funnel: i, fin: fi },
+      base: { funnel: b, fin: fb, label: o.base.label }, improved: { funnel: i, fin: fi, label: o.improved.label },
+      extraLeads: i.leads - b.leads,
+      extraQualified: i.qualified - b.qualified,
       extraSales: i.sales - b.sales,
       incrementalRevenue: round2(fi.adRevenue - fb.adRevenue),
       cplReduction: round2(bc - ic),
       cplReductionPct: bc > 0 ? (bc - ic) / bc * 100 : null,
-      roasDelta: (fi.roas !== null && fb.roas !== null) ? fi.roas - fb.roas : null,
-      roasMultiple: (fi.roas !== null && fb.roas) ? fi.roas / fb.roas : null
+      conversionBase: b.conversionRate, conversionImproved: i.conversionRate,
+      conversionDeltaPP: (i.conversionRate - b.conversionRate) * 100,
+      conversionRelativePct: b.conversionRate > 0 ? (i.conversionRate / b.conversionRate - 1) * 100 : null,
+      roasDelta: (fi.roas !== null && fb.roas !== null) ? fi.roas - fb.roas : null
     };
   }
 
   // ---------------------------------------------------------------- orquestração
   function findScenario(config, id) {
-    if (id === 'castelo') return config.castelo;
     for (var k = 0; k < config.scenarios.length; k++) if (config.scenarios[k].id === id) return config.scenarios[k];
     return null;
   }
 
   function computeAll(configIn, sim) {
     var config = normalizeConfig(configIn);
-    var policy = config.display.policy;
-    var scenario = findScenario(config, sim.scenarioId) || config.scenarios[0];
-    var params = sanitizeParams(scenario);
+    var scenario = findScenario(config, sim.scenarioId) || findScenario(config, 'moderado') || config.scenarios[0];
+    var share = sim.followersShare === undefined ? config.defaults.followersShare : rate(sim.followersShare);
+    var op = mainOperation(config, scenario, share);
+    var indep = independentOperation(config, share);
     var proj = Object.assign({}, config.projection, sim.projection || {});
     var refEff = Math.max(0, num(proj.finalEfficiency, 1));
     var ticket = nonNeg(sim.ticket), currentInv = nonNeg(sim.investment);
-    var issues = paramIssues(scenario);
     var fin = Object.assign({}, config.financial);
     if (typeof sim.includeAgencyFee === 'boolean') fin.includeAgencyFee = sim.includeAgencyFee;
+    var issues = operationIssues(op, 'Com Método TDE').concat(operationIssues(indep, 'Sem Método TDE'));
 
     var rev = null, investment = currentInv;
     if (sim.mode === 'reverse') {
-      rev = reverse({ type: sim.reverseType, target: sim.reverseTarget, ticket: ticket, params: params, policy: policy,
-        efficiency: refEff, currentInvestment: currentInv });
+      rev = reverse({ type: sim.reverseType, target: sim.reverseTarget, ticket: ticket, op: op, efficiency: refEff, currentInvestment: currentInv });
       if (rev.feasible) investment = rev.investment;
     }
 
-    var f = funnel(investment, params, policy, refEff);
+    var f = funnel(investment, op, refEff);
 
-    // Alavancas: mês atual (mês 1) e mês após maturação (regime)
     var enabled = sim.leversEnabled || {};
     var maxMat = config.levers.reduce(function (a, l) { return enabled[l.id] ? Math.max(a, Math.round(nonNeg(l.maturationMonths))) : a; }, 0);
     function leverAgg(month) {
       var per = config.levers.map(function (l) { var r = leverMonth(l, !!enabled[l.id], month, ticket); r.id = l.id; return r; });
       return {
-        per: per,
-        sales: per.reduce(function (a, r) { return a + r.sales; }, 0),
+        per: per, sales: per.reduce(function (a, r) { return a + r.sales; }, 0),
         revenue: round2(per.reduce(function (a, r) { return a + r.revenue; }, 0)),
         cost: round2(per.reduce(function (a, r) { return a + r.cost; }, 0))
       };
     }
     var nowL = leverAgg(1), matureL = leverAgg(maxMat + 1);
-
     var finAds = financials({ investment: investment, ticket: ticket, adSales: f.sales, fin: fin });
     var finNow = financials({ investment: investment, ticket: ticket, adSales: f.sales, leverSales: nowL.sales, leverRevenue: nowL.revenue, leverCosts: nowL.cost, fin: fin });
     var finMature = financials({ investment: investment, ticket: ticket, adSales: f.sales, leverSales: matureL.sales, leverRevenue: matureL.revenue, leverCosts: matureL.cost, fin: fin });
 
-    var baseId = sim.compareBaseId === 'selected' || !findScenario(config, sim.compareBaseId) ? scenario.id : sim.compareBaseId;
-    var impId = findScenario(config, sim.compareImprovedId) ? sim.compareImprovedId : 'castelo';
-    var baseSc = findScenario(config, baseId), impSc = findScenario(config, impId);
-    var cmp = compare({ investment: investment, ticket: ticket, base: baseSc, improved: impSc, policy: policy, efficiency: refEff, fin: fin });
-    cmp.baseScenario = { id: baseSc.id, name: baseSc.name, params: sanitizeParams(baseSc) };
-    cmp.improvedScenario = { id: impSc.id, name: impSc.name, params: sanitizeParams(impSc) };
+    var cmp = compare({ investment: investment, ticket: ticket, base: indep, improved: op, efficiency: refEff, fin: fin });
 
-    var common = { investment: investment, ticket: ticket, policy: policy, projection: proj, levers: config.levers, leversEnabled: enabled, fin: fin };
-    var projection = project(Object.assign({}, common, { params: params }));
-    var projBase = project(Object.assign({}, common, { params: sanitizeParams(baseSc), leversEnabled: {} }));
-    var projImp = project(Object.assign({}, common, { params: sanitizeParams(impSc), leversEnabled: {} }));
+    var common = { investment: investment, ticket: ticket, projection: proj, levers: config.levers, fin: fin };
+    var projection = project(Object.assign({}, common, { op: op, leversEnabled: enabled }));
+    var projBase = project(Object.assign({}, common, { op: indep, leversEnabled: {}, projection: Object.assign({}, proj, { rampEnabled: false, finalEfficiency: 1 }) }));
+    var projImp = project(Object.assign({}, common, { op: op, leversEnabled: {} }));
 
     return {
-      config: config, policy: policy, scenario: { id: scenario.id, name: scenario.name, description: scenario.description, params: params },
-      issues: issues, ticket: ticket, currentInvestment: currentInv, investment: investment, mode: sim.mode,
+      config: config, scenario: { id: scenario.id, name: scenario.name, description: scenario.description, closeRate: scenario.closeRate },
+      op: op, independent: indep, issues: issues, ticket: ticket, currentInvestment: currentInv, investment: investment, mode: sim.mode,
       reverse: rev, funnel: f, financial: finAds,
-      levers: { now: finNow, mature: finMature, nowPer: nowL.per, maturePer: matureL.per, maturationMonth: maxMat + 1 },
+      levers: { now: finNow, mature: finMature, maturationMonth: maxMat + 1 },
       compare: cmp, projection: projection, compareProjection: { base: projBase, improved: projImp },
       projectionSettings: proj, fin: fin
     };
   }
 
   var api = {
-    POLICY: POLICY, defaultConfig: defaultConfig, normalizeConfig: normalizeConfig, defaultSim: defaultSim,
-    sanitizeParams: sanitizeParams, paramIssues: paramIssues, funnel: funnel, financials: financials, reverse: reverse,
+    CONFIG_VERSION: CONFIG_VERSION, defaultConfig: defaultConfig, normalizeConfig: normalizeConfig, defaultSim: defaultSim,
+    historyRates: historyRates, mainOperation: mainOperation, independentOperation: independentOperation,
+    funnel: funnel, financials: financials, reverse: reverse, salesPerReal: salesPerReal,
     leverMonth: leverMonth, efficiencyAt: efficiencyAt, project: project, compare: compare, computeAll: computeAll,
     findScenario: findScenario, round2: round2
   };
@@ -834,7 +958,7 @@ td.dim { color: var(--dim); }
     sliders: '<path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/>',
     dollar: '<path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
     target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
-    calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+    filter: '<path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>',
     check: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
     trend: '<path d="M22 7l-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
     file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/>',
@@ -861,17 +985,15 @@ td.dim { color: var(--dim); }
   var BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
   var BRL0 = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0, minimumFractionDigits: 0 });
   var BRLC = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', maximumFractionDigits: 1 });
-  function money(v) { return v === null || v === undefined || !isFinite(v) ? '—' : BRL.format(v); }
-  function money0(v) { return v === null || v === undefined || !isFinite(v) ? '—' : BRL0.format(v); }
+  function ok(v) { return v !== null && v !== undefined && isFinite(v); }
+  function money(v) { return ok(v) ? BRL.format(v) : '—'; }
+  function money0(v) { return ok(v) ? BRL0.format(v) : '—'; }
   function moneyC(v) { return BRLC.format(v); }
   function signedMoney(v) { return (v > 0 ? '+' : '') + money(v); }
-  function qty(v) {
-    if (v === null || v === undefined || !isFinite(v)) return '—';
-    if (model && model.policy === 'expected') return nf(0, 1).format(Math.round(v * 10) / 10);
-    return Number.isInteger(v) ? nf(0, 0).format(v) : nf(0, 1).format(v);
-  }
-  function xr(v) { return v === null || v === undefined || !isFinite(v) ? '—' : nf(1, 1).format(v) + 'x'; }
-  function pct(v, d) { return v === null || v === undefined || !isFinite(v) ? '—' : nf(0, d === undefined ? 1 : d).format(v) + '%'; }
+  function qty(v) { return ok(v) ? (Number.isInteger(v) ? nf(0, 0).format(v) : nf(0, 1).format(v)) : '—'; }
+  function signedQty(v) { return (v > 0 ? '+' : '') + qty(v); }
+  function xr(v) { return ok(v) ? nf(2, 2).format(v) + 'x' : '—'; }
+  function pct(v, d) { return ok(v) ? nf(0, d === undefined ? 1 : d).format(v) + '%' : '—'; }
   function rateTxt(r) { return pct(r * 100, 1); }
   function esc(s) { return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function plural(n, a, b) { return Math.abs(n - 1) < 1e-9 ? a : b; }
@@ -896,7 +1018,6 @@ td.dim { color: var(--dim); }
     if (kind === 'num') return nf(0, 2).format(v || 0);
     return v;
   }
-  // Valida um texto digitado. Retorna {value} ou {error}.
   function validate(kind, raw, opt) {
     opt = opt || {};
     var n = parseNum(raw);
@@ -917,25 +1038,42 @@ td.dim { color: var(--dim); }
   }
 
   // ------------------------------------------------------------ armazenamento local
-  var K_CFG = 'castelo-roi:config:v1', K_SIM = 'castelo-roi:sim:v1';
-  function load(k) { try { var s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+  var K_CFG = 'tde-roi:config', K_SIM = 'tde-roi:sim';
+  var LEGACY_KEYS = { 'tde-roi:config': 'castelo-roi:config:v1', 'tde-roi:sim': 'castelo-roi:sim:v1' }; // instalações antigas
+  function load(k) {
+    try {
+      var s = localStorage.getItem(k);
+      if (!s && LEGACY_KEYS[k]) { s = localStorage.getItem(LEGACY_KEYS[k]); if (s) { localStorage.setItem(k, s); localStorage.removeItem(LEGACY_KEYS[k]); } }
+      return s ? JSON.parse(s) : null;
+    } catch (e) { return null; }
+  }
   function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
 
   var config = E.normalizeConfig(load(K_CFG));
   var sim = normalizeSim(load(K_SIM));
-  var draft = null;   // cópia em edição no painel de configurações
+  var draft = null;
   var model = null;
 
+  // Simulação salva da versão anterior: preserva os dados do prospect; valores que eram apenas o
+  // padrão antigo (R$ 1.500 / R$ 1.500) passam a usar os padrões oficiais TDE.
   function normalizeSim(s) {
     var d = E.defaultSim(config);
     if (!s || typeof s !== 'object') return d;
+    var legacy = s.version !== E.CONFIG_VERSION;
     Object.keys(d).forEach(function (k) {
-      if (s[k] === undefined) return;
+      if (s[k] === undefined || k === 'version') return;
       if (k === 'projection') d.projection = Object.assign(d.projection, s.projection || {});
       else if (k === 'leversEnabled') d.leversEnabled = Object.assign({}, s.leversEnabled || {});
       else if (typeof s[k] === typeof d[k]) d[k] = s[k];
     });
+    if (legacy) {
+      d.scenarioId = config.defaults.scenarioId;
+      d.followersShare = config.defaults.followersShare;
+      if (s.investment === 1500 && s.ticket === 1500) { d.investment = config.defaults.investment; d.ticket = config.defaults.ticket; }
+      if (['revenue', 'investment', 'sales', 'roas', 'compare'].indexOf(d.chartMetric) < 0) d.chartMetric = 'revenue';
+    }
+    if (!E.findScenario(config, d.scenarioId)) d.scenarioId = config.defaults.scenarioId;
     return d;
   }
   function cfg() { return draft || config; }
@@ -944,8 +1082,7 @@ td.dim { color: var(--dim); }
   function $(id) { return document.getElementById(id); }
   function setHTML(el, html) {
     var a = document.activeElement, id = a && el.contains(a) ? a.id : null;
-    el.innerHTML = html;
-    hydrateIcons(el);
+    el.innerHTML = html; hydrateIcons(el);
     if (id) { var n = document.getElementById(id); if (n) n.focus(); }
   }
   function toast(msg, ms) {
@@ -954,11 +1091,12 @@ td.dim { color: var(--dim); }
     clearTimeout(toast._t);
     toast._t = setTimeout(function () { root.innerHTML = ''; }, ms || 3200);
   }
-  function setPressed(group, attr, val) {
-    $(group).querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute(attr) === String(val))); });
-  }
+  function setPressed(group, attr, val) { $(group).querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute(attr) === String(val))); }); }
   function setSwitch(id, on) { $(id).setAttribute('aria-checked', String(!!on)); }
   function tip(text) { return '<span class="tip" tabindex="0" data-tip="' + esc(text) + '">?</span>'; }
+  function kpi(label, value, sub, cls, tipText) {
+    return '<div class="kpi ' + (cls || '') + '"><div class="k">' + label + (tipText ? tip(tipText) : '') + '</div><div class="v">' + value + '</div>' + (sub ? '<div class="s">' + sub + '</div>' : '') + '</div>';
+  }
 
   // ------------------------------------------------------------ ciclo principal
   function recompute() {
@@ -966,55 +1104,50 @@ td.dim { color: var(--dim); }
     renderAll();
     store(K_SIM, sim);
   }
-
   function renderAll() {
-    renderModeUI();
-    renderScenarios();
-    renderReverse();
-    renderCosts();
-    renderFunnel();
-    renderKpis();
-    renderSelects();
-    renderCompare();
-    renderProjectionControls();
-    renderChart();
-    renderTable();
-    renderLevers();
+    renderModeUI(); renderScenarios(); renderReverse(); renderDistribution(); renderAudience(); renderFunnel();
+    renderKpis(); renderCosts(); renderCompare(); renderProjectionControls(); renderChart(); renderTable(); renderLevers();
   }
 
-  // ------------------------------------------------------------ entradas do prospect
+  // ------------------------------------------------------------ entradas
   function bindNumInput(el, errEl, kindArg, get, set, opt) {
     function K() { return typeof kindArg === 'function' ? kindArg() : kindArg; }
     el.addEventListener('input', function () {
-      var kind = K();
-      var r = validate(kind, el.value, opt);
+      var kind = K(), r = validate(kind, el.value, opt);
       el.classList.toggle('bad', !!r.error);
       if (errEl) errEl.textContent = r.error || '';
-      if (r.error) { set(r.fallback !== undefined ? r.fallback : (kind === 'money' && el.value.trim() === '' ? 0 : get())); }
+      if (r.error) set(kind === 'money' && el.value.trim() === '' ? 0 : get());
       else set(r.value);
       recompute();
     });
     el.addEventListener('blur', function () {
-      var kind = K();
-      var r = validate(kind, el.value, opt);
-      if (!r.error || el.value.trim() === '') {
-        el.value = fmtInput(kind, get()); el.classList.remove('bad'); if (errEl) errEl.textContent = '';
-      }
+      var kind = K(), r = validate(kind, el.value, opt);
+      if (!r.error || el.value.trim() === '') { el.value = fmtInput(kind, get()); el.classList.remove('bad'); if (errEl) errEl.textContent = ''; }
     });
     el.addEventListener('focus', function () { setTimeout(function () { try { el.select(); } catch (e) {} }, 0); });
   }
 
+  var NUM_INPUTS = ['in-investment', 'in-ticket', 'in-target', 'in-share-followers', 'in-share-contacts', 'in-growth', 'in-ramp', 'in-eff-start', 'in-eff-final'];
   function syncInputs() {
     $('in-name').value = sim.name;
     $('in-investment').value = fmtInput('money', sim.investment);
     $('in-ticket').value = fmtInput('money', sim.ticket);
     $('in-target').value = sim.reverseType === 'sales' ? fmtInput('num', sim.reverseTarget) : fmtInput('money', sim.reverseTarget);
+    $('in-share-followers').value = fmtInput('pct', sim.followersShare);
+    $('in-share-contacts').value = fmtInput('pct', 1 - sim.followersShare);
     $('in-growth').value = fmtInput('pct', sim.projection.growthPct);
     $('in-ramp').value = fmtInput('int', sim.projection.rampMonths);
     $('in-eff-start').value = fmtInput('pct', sim.projection.startEfficiency);
     $('in-eff-final').value = fmtInput('pct', sim.projection.finalEfficiency);
-    ['in-investment', 'in-ticket', 'in-target', 'in-growth', 'in-ramp', 'in-eff-start', 'in-eff-final'].forEach(function (id) { $(id).classList.remove('bad'); });
-    ['err-investment', 'err-ticket', 'err-target', 'err-growth', 'err-ramp', 'err-eff-start', 'err-eff-final'].forEach(function (id) { $(id).textContent = ''; });
+    NUM_INPUTS.forEach(function (id) { $(id).classList.remove('bad'); var e = $(id.replace('in-', 'err-')); if (e) e.textContent = ''; });
+  }
+
+  function setConfigFlag(path, value) {
+    var ks = path.split('.'), o = config;
+    for (var i = 0; i < ks.length - 1; i++) o = o[ks[i]];
+    o[ks[ks.length - 1]] = value;
+    store(K_CFG, config);
+    recompute();
   }
 
   function bindStatic() {
@@ -1022,44 +1155,41 @@ td.dim { color: var(--dim); }
     bindNumInput($('in-investment'), $('err-investment'), 'money', function () { return sim.investment; }, function (v) { sim.investment = v; });
     bindNumInput($('in-ticket'), $('err-ticket'), 'money', function () { return sim.ticket; }, function (v) { sim.ticket = v; });
     bindNumInput($('in-target'), $('err-target'), function () { return sim.reverseType === 'sales' ? 'num' : 'money'; }, function () { return sim.reverseTarget; }, function (v) { sim.reverseTarget = v; });
+    bindNumInput($('in-share-followers'), $('err-share-followers'), 'pct', function () { return sim.followersShare; }, function (v) {
+      sim.followersShare = v; if (document.activeElement !== $('in-share-contacts')) $('in-share-contacts').value = fmtInput('pct', 1 - v);
+    });
+    bindNumInput($('in-share-contacts'), $('err-share-contacts'), 'pct', function () { return 1 - sim.followersShare; }, function (v) {
+      sim.followersShare = Math.round((1 - v) * 1e6) / 1e6; if (document.activeElement !== $('in-share-followers')) $('in-share-followers').value = fmtInput('pct', sim.followersShare);
+    });
     bindNumInput($('in-growth'), $('err-growth'), 'pct', function () { return sim.projection.growthPct; }, function (v) { sim.projection.growthPct = v; }, { max: 100 });
     bindNumInput($('in-ramp'), $('err-ramp'), 'int', function () { return sim.projection.rampMonths; }, function (v) { sim.projection.rampMonths = v; }, { min: 1, max: 12 });
     bindNumInput($('in-eff-start'), $('err-eff-start'), 'pct', function () { return sim.projection.startEfficiency; }, function (v) { sim.projection.startEfficiency = v; }, { max: 200 });
     bindNumInput($('in-eff-final'), $('err-eff-final'), 'pct', function () { return sim.projection.finalEfficiency; }, function (v) { sim.projection.finalEfficiency = v; }, { max: 200 });
 
-    $('seg-mode').addEventListener('click', function (e) {
-      var b = e.target.closest('button'); if (!b) return; sim.mode = b.getAttribute('data-mode'); recompute();
-    });
+    $('seg-mode').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.mode = b.getAttribute('data-mode'); recompute(); });
     $('seg-rtype').addEventListener('click', function (e) {
       var b = e.target.closest('button'); if (!b) return;
       var t = b.getAttribute('data-rtype'); if (t === sim.reverseType) return;
-      sim.reverseType = t;
-      sim.reverseTarget = t === 'sales' ? 6 : 10000;
+      sim.reverseType = t; sim.reverseTarget = t === 'sales' ? 14 : 20000;
       $('in-target').value = t === 'sales' ? fmtInput('num', sim.reverseTarget) : fmtInput('money', sim.reverseTarget);
       $('err-target').textContent = ''; $('in-target').classList.remove('bad');
       recompute();
     });
-    $('scen-buttons').addEventListener('click', function (e) {
-      var b = e.target.closest('button[data-scen]'); if (!b) return; sim.scenarioId = b.getAttribute('data-scen'); recompute();
-    });
+    $('scen-buttons').addEventListener('click', function (e) { var b = e.target.closest('button[data-scen]'); if (!b) return; sim.scenarioId = b.getAttribute('data-scen'); recompute(); });
     $('sw-fee').addEventListener('click', function () { sim.includeAgencyFee = !sim.includeAgencyFee; recompute(); });
-    $('sel-base').addEventListener('change', function (e) { sim.compareBaseId = e.target.value; recompute(); });
-    $('sel-imp').addEventListener('change', function (e) { sim.compareImprovedId = e.target.value; recompute(); });
-    $('seg-months').addEventListener('click', function (e) {
-      var b = e.target.closest('button'); if (!b) return; sim.projection.months = Number(b.getAttribute('data-months')); recompute();
-    });
+    $('sw-indirect').addEventListener('click', function () { setConfigFlag('acquisition.indirectFollowersEnabled', !config.acquisition.indirectFollowersEnabled); });
+    $('sw-extra').addEventListener('click', function () { setConfigFlag('acquisition.extraConversationsEnabled', !config.acquisition.extraConversationsEnabled); });
+    $('seg-months').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.projection.months = Number(b.getAttribute('data-months')); recompute(); });
     $('sw-growth').addEventListener('click', function () { sim.projection.growthEnabled = !sim.projection.growthEnabled; recompute(); });
     $('sw-ramp').addEventListener('click', function () { sim.projection.rampEnabled = !sim.projection.rampEnabled; recompute(); });
-    $('seg-metric').addEventListener('click', function (e) {
-      var b = e.target.closest('button'); if (!b) return; sim.chartMetric = b.getAttribute('data-metric'); recompute();
-    });
+    $('seg-metric').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.chartMetric = b.getAttribute('data-metric'); recompute(); });
     $('levers').addEventListener('click', function (e) {
       var sw = e.target.closest('[data-lever]');
       if (sw) { var id = sw.getAttribute('data-lever'); sim.leversEnabled[id] = !sim.leversEnabled[id]; recompute(); return; }
       if (e.target.closest('[data-lever-cfg]')) openSettings('alavancas');
     });
-    $('btn-settings').addEventListener('click', function () { openSettings('financeiro'); });
-    $('btn-params').addEventListener('click', function () { openSettings('comerciais'); });
+    $('btn-settings').addEventListener('click', function () { openSettings('investimento'); });
+    $('btn-params').addEventListener('click', function () { openSettings('comercial'); });
     $('btn-costs').addEventListener('click', function () { openSettings('financeiro'); });
     $('btn-new').addEventListener('click', newSimulation);
     $('btn-copy').addEventListener('click', copySummary);
@@ -1070,15 +1200,13 @@ td.dim { color: var(--dim); }
   function newSimulation() {
     var btn = $('btn-new');
     if (!btn._armed) {
-      btn._armed = true;
-      btn.innerHTML = icon('refresh') + 'Confirmar nova simulação';
+      btn._armed = true; btn.innerHTML = icon('refresh') + 'Confirmar nova simulação';
       setTimeout(function () { if (btn._armed) { btn._armed = false; btn.innerHTML = icon('refresh') + 'Nova simulação'; } }, 3500);
       return;
     }
     btn._armed = false; btn.innerHTML = icon('refresh') + 'Nova simulação';
     sim = E.defaultSim(config);
-    syncInputs(); recompute();
-    $('in-name').focus();
+    syncInputs(); recompute(); $('in-name').focus();
     toast('Nova simulação iniciada com os parâmetros padrão salvos.');
   }
 
@@ -1093,173 +1221,170 @@ td.dim { color: var(--dim); }
     $('lbl-target').textContent = sales ? 'Meta de vendas por mês' : 'Meta de faturamento mensal';
     $('target-prefix').hidden = sales;
     $('target-wrap').classList.toggle('prefix', !sales);
-    $('funnel-sub').textContent = rev ? 'Funil com o investimento necessário para atingir a meta.' : 'Mês de referência, com a operação madura.';
+    $('funnel-sub').textContent = rev ? 'Funil com o investimento mínimo para atingir a meta.' : 'Mês de referência, com a operação madura.';
     setSwitch('sw-fee', model.fin.includeAgencyFee);
+    setSwitch('sw-indirect', cfg().acquisition.indirectFollowersEnabled);
+    setSwitch('sw-extra', cfg().acquisition.extraConversationsEnabled);
   }
 
   function renderScenarios() {
-    var c = cfg();
-    var html = c.scenarios.map(function (s) {
+    var html = cfg().scenarios.map(function (s) {
       return '<button type="button" id="scen-' + esc(s.id) + '" data-scen="' + esc(s.id) + '" aria-pressed="' + (s.id === model.scenario.id) + '">' + esc(s.name) + '</button>';
     }).join('');
     if ($('scen-buttons')._sig !== html) { setHTML($('scen-buttons'), html); $('scen-buttons')._sig = html; }
     $('scen-desc').textContent = model.scenario.description || '';
-    var p = model.scenario.params;
+    var f = model.funnel;
     $('scen-chips').innerHTML =
-      '<span class="chip">CPL <b>' + money(p.cpl) + '</b></span>' +
-      '<span class="chip">Agendamento <b>' + rateTxt(p.scheduleRate) + '</b></span>' +
-      '<span class="chip">Comparecimento <b>' + rateTxt(p.showRate) + '</b></span>' +
-      '<span class="chip">Fechamento <b>' + rateTxt(p.closeRate) + '</b></span>';
-    $('scen-issues').innerHTML = model.issues.length ? '<div class="alert red" style="margin-top:10px">' + model.issues.map(esc).join(' ') + ' Ajuste em Configurar parâmetros.</div>' : '';
+      '<span class="chip">Qualificação <b>' + rateTxt(f.qualificationRate) + '</b></span>' +
+      '<span class="chip">Fechamento <b>' + rateTxt(model.op.closeRate) + '</b></span>' +
+      '<span class="chip">Conversão geral <b>' + rateTxt(model.op.qualificationRate * model.op.closeRate) + '</b></span>' +
+      '<span class="chip">CPL <b>' + money(model.op.cpl) + '</b></span>';
+    $('scen-issues').innerHTML = model.issues.length ? '<div class="alert red" style="margin-top:10px">' + model.issues.map(esc).join(' ') + ' Ajuste em Configurações.</div>' : '';
   }
 
   function renderReverse() {
     var el = $('reverse-result');
     if (sim.mode !== 'reverse') { el.innerHTML = ''; return; }
-    var r = model.reverse;
+    var r = model.reverse, f = model.funnel;
     if (!r.feasible) { el.innerHTML = '<div class="alert red" style="margin-top:14px">Não é possível calcular a meta: ' + esc(r.reason) + '</div>'; return; }
     var diff = r.difference;
-    var diffTxt = Math.abs(diff) < 0.005 ? 'Igual ao atual' : (diff > 0 ? '+' + money(diff) + ' por mês' : money(diff) + ' por mês');
+    var diffTxt = Math.abs(diff) < 0.005 ? 'Igual ao atual' : (diff > 0 ? '+' : '') + money(diff) + ' por mês';
     var metaTxt = r.type === 'revenue' ? money(r.target) + ' de faturamento' : qty(r.target) + ' ' + plural(r.target, 'venda', 'vendas');
     el.innerHTML = '<div class="box reverse-box">' +
       '<div class="kv"><span>Meta</span><b>' + metaTxt + '</b></div>' +
       '<div class="kv"><span>Vendas necessárias</span><b>' + qty(r.sales) + (r.type === 'revenue' ? ' (' + money(r.revenue) + ')' : '') + '</b></div>' +
-      '<div class="kv"><span>Comparecimentos necessários</span><b>' + qty(r.shows) + '</b></div>' +
-      '<div class="kv"><span>Agendamentos necessários</span><b>' + qty(r.appointments) + '</b></div>' +
-      '<div class="kv"><span>Leads necessários</span><b>' + qty(r.leads) + '</b></div>' +
-      '<div class="kv" style="border-top:1px solid var(--line);padding-top:10px"><span>Investimento necessário</span><b style="color:var(--gold);font-size:16px">' + money(r.investment) + '</b></div>' +
+      '<div class="kv"><span>Leads qualificados</span><b>' + qty(f.qualified) + '</b></div>' +
+      '<div class="kv"><span>Leads recebidos</span><b>' + qty(f.leads) + '</b></div>' +
+      '<div class="kv" style="border-top:1px solid var(--line);padding-top:10px"><span>Investimento mínimo</span><b style="color:var(--gold);font-size:16px">' + money(r.investment) + '</b></div>' +
       '<div class="kv"><span>Investimento atual</span><b>' + money(r.currentInvestment) + '</b></div>' +
       '<div class="kv"><span>Diferença</span><b style="color:' + (diff > 0 ? 'var(--fg)' : 'var(--gold)') + '">' + diffTxt + '</b></div>' +
-      '</div><p class="hint" style="margin-top:8px">Calculado com as taxas do cenário ' + esc(model.scenario.name) + '. Considera somente vendas dos anúncios.</p>';
+      '</div><p class="hint" style="margin-top:8px">Mesmas fórmulas do modo padrão, com a distribuição, o CPL, as conversas da captação e as taxas do cenário ' + esc(model.scenario.name) + '.</p>';
   }
 
-  function renderCosts() {
-    var f = model.financial, fin = model.fin;
-    var feeRaw = Number(fin.agencyFee) || 0;
-    $('costs-list').innerHTML =
-      '<div class="kv"><span>Investimento em anúncios</span><b>' + money(f.investment) + '</b></div>' +
-      '<div class="kv" style="margin-top:6px"><span>Honorários da agência' + (fin.includeAgencyFee ? '' : ' (não incluídos)') + '</span><b>' + (feeRaw > 0 ? money(feeRaw) : 'Não informado') + '</b></div>' +
-      '<div class="kv" style="margin-top:6px"><span>Outros custos fixos</span><b>' + money(f.otherCosts) + '</b></div>' +
-      '<div class="kv" style="margin-top:6px"><span>Custos variáveis (' + pct(f.variableCostPct * 100) + ' do faturamento)</span><b>' + money(f.variableCosts) + '</b></div>' +
-      '<div class="kv" style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px"><span>Total considerado no mês</span><b>' + money(f.fixedCosts + f.variableCosts) + '</b></div>';
+  function renderDistribution() {
+    var f = model.funnel, s = f.followersShare;
+    $('dist-bar').innerHTML = '<span class="follow" style="width:' + (s * 100) + '%"></span><span class="contact" style="width:' + ((1 - s) * 100) + '%"></span>';
+    $('dist-followers').innerHTML = money(f.followersBudget) + '<small>Captação de seguidores</small>';
+    $('dist-contacts').innerHTML = money(f.contactsBudget) + '<small>Campanhas de contatos</small>';
+    ['in-share-followers', 'in-share-contacts'].forEach(function (id) {
+      var el = $(id); if (document.activeElement !== el && !el.classList.contains('bad')) el.value = fmtInput('pct', id === 'in-share-followers' ? s : 1 - s);
+    });
+  }
+
+  function renderAudience() {
+    var f = model.funnel, a = cfg().acquisition, hist = a.followerCostMode !== 'manual';
+    $('audience').innerHTML = '<div class="aud">' +
+      kpi('Investimento em seguidores', money(f.followersBudget), pct(f.followersShare * 100, 0) + ' da verba') +
+      kpi('Custo por seguidor', f.followerCost > 0 ? money(f.followerCost) : '—', hist ? 'Referência histórica' : 'Valor manual', '', hist ? 'Razão exata do histórico: R$ ' + nf(2, 2).format(a.history.followerInvestment) + ' ÷ ' + qty(a.history.directFollowers) + ' seguidores. Exibido arredondado.' : '') +
+      kpi('Seguidores da captação', qty(f.followersDirect), 'Gerados pela verba de seguidores') +
+      '</div><div class="aud-total"><span>' +
+      (a.indirectFollowersEnabled ? qty(f.followersDirect) + ' da captação + ' + qty(f.followersIndirect) + ' adicionais das campanhas de contatos' : 'Somente seguidores da captação') +
+      '</span><b>' + qty(f.followers) + '</b></div><div class="aud-meta">Total estimado de novos seguidores por mês.</div>';
   }
 
   function renderFunnel() {
-    var f = model.funnel;
-    var base = f.leads > 0 ? f.leads : 1;
-    function stage(ic, name, value, sub, w, final) {
+    var f = model.funnel, base = f.leads > 0 ? f.leads : 1;
+    function stage(ic, name, value, sub, w, final, plain) {
       return '<div class="stage' + (final ? ' final' : '') + '"><div class="ic">' + icon(ic) + '</div><div style="min-width:0"><div class="nm">' + name + '</div>' +
-        (sub ? '<div class="sub">' + sub + '</div>' : '') + '</div><div class="value' + (ic !== 'dollar' ? ' gold' : '') + '">' + value + '</div>' +
+        (sub ? '<div class="sub">' + sub + '</div>' : '') + '</div><div class="value' + (plain ? '' : ' gold') + '">' + value + '</div>' +
         (w !== null ? '<div class="bar" style="width:' + Math.max(0, Math.min(100, w)) + '%"></div>' : '') + '</div>';
     }
     function conn(t) { return '<div class="conn">' + t + '</div>'; }
-    var effNote = Math.abs(f.efficiency - 1) > 1e-9 ? ' (eficiência ' + pct(f.efficiency * 100, 0) + ' aplicada)' : '';
-    var html =
-      stage('dollar', 'Investimento mensal', money(f.investment), 'CPL considerado: ' + money(f.cpl), null) +
-      conn('÷ CPL de <b>' + money(f.cpl) + '</b>') +
-      stage('target', 'Leads gerados', qty(f.leads), 'Contatos estimados no mês', 100) +
-      conn('× <b>' + rateTxt(f.scheduleRate) + '</b> taxa de agendamento' + effNote) +
-      stage('calendar', 'Agendamentos', qty(f.appointments), 'Orçamentos ou sessões marcadas', f.appointments / base * 100) +
-      conn('× <b>' + rateTxt(f.showRate) + '</b> taxa de comparecimento') +
-      stage('check', 'Comparecimentos', qty(f.shows), 'Pessoas que comparecem', f.shows / base * 100) +
-      conn('× <b>' + rateTxt(f.closeRate) + '</b> taxa de fechamento') +
-      stage('trend', 'Vendas (fechamentos)', qty(f.sales), 'Projetos fechados vindos dos anúncios', f.sales / base * 100, true);
-    $('funnel').innerHTML = html;
-    $('policy-note').textContent = model.policy === 'expected'
-      ? 'Valores esperados (médias estatísticas), exibidos com 1 casa decimal. Faturamento = vendas esperadas × ticket médio.'
-      : 'Quantidades inteiras: cada etapa é arredondada para baixo, pois não existem meias pessoas. Faturamento = vendas exibidas × ticket médio.';
-    if (!f.valid) $('policy-note').textContent = 'O CPL do cenário está zerado. Ajuste em Configurar parâmetros para gerar leads.';
+    var effNote = Math.abs(f.efficiency - 1) > 1e-9 ? ' (eficiência ' + pct(f.efficiency * 100, 0) + ')' : '';
+    var leadSub = qty(f.contactLeads) + ' das campanhas de contatos (CPL ' + money(f.cpl) + ')' + (cfg().acquisition.extraConversationsEnabled ? ' + ' + qty(f.extraConversations) + ' conversas da captação' : '');
+    $('funnel').innerHTML =
+      conn('Verba de contatos <b>' + money(f.contactsBudget) + '</b> ÷ CPL <b>' + money(f.cpl) + '</b>') +
+      stage('target', 'Leads gerados', qty(f.leads), leadSub, 100) +
+      conn('× <b>' + rateTxt(f.qualificationRate) + '</b> taxa de qualificação') +
+      stage('filter', 'Leads qualificados', qty(f.qualified), 'Intenção real, estilo compatível e potencial de compra', f.qualified / base * 100) +
+      conn('× <b>' + rateTxt(f.closeRate) + '</b> fechamento do cenário ' + esc(model.scenario.name) + effNote) +
+      stage('check', 'Vendas realizadas', qty(f.sales), 'Conversão geral de ' + rateTxt(f.conversionRate) + ' dos leads', f.sales / base * 100) +
+      conn('× ticket médio de <b>' + money(model.ticket) + '</b>') +
+      stage('dollar', 'Faturamento projetado', money(model.financial.adRevenue), qty(f.sales) + ' ' + plural(f.sales, 'venda', 'vendas') + ' × ' + money(model.ticket), null, true);
+    $('policy-note').textContent = 'Cálculo com valores esperados; os inteiros exibidos são arredondados apenas no final. Faturamento = vendas inteiras × ticket médio.' +
+      (cfg().acquisition.extraConversationsEnabled ? ' As conversas da captação são tratadas como contatos distintos dos leads das campanhas de contatos (sem deduplicação comprovada).' : '');
+    if (!f.valid) $('policy-note').textContent = 'O CPL está zerado. Ajuste em Configurações para gerar leads.';
   }
 
   var STATUS = { above: 'Acima do equilíbrio', near: 'Próximo do equilíbrio', below: 'Abaixo do equilíbrio' };
 
-  function kpi(label, value, sub, cls, tipText) {
-    return '<div class="kpi ' + (cls || '') + '"><div class="k">' + label + (tipText ? tip(tipText) : '') + '</div><div class="v">' + value + '</div>' + (sub ? '<div class="s">' + sub + '</div>' : '') + '</div>';
-  }
-
   function renderKpis() {
-    var f = model.financial;
-    var roiLabel = f.roiSimplified ? 'ROI simplificado' : 'ROI estimado';
-    var roiSub = f.roi === null ? 'Sem custos para comparar' : (f.roiSimplified ? 'Sem custos variáveis informados' : 'Resultado ÷ custos fixos considerados');
-    var be = f.breakEvenSales;
+    var fi = model.financial, f = model.funnel;
+    var be = fi.breakEvenSales;
     $('kpis').innerHTML =
-      kpi('Faturamento bruto projetado', money(f.adRevenue), qty(f.adSales) + ' ' + plural(f.adSales, 'venda', 'vendas') + ' × ' + money(f.ticket), 'pos') +
-      kpi('ROAS', xr(f.roas), 'Faturamento ÷ investimento em anúncios', 'info', 'Retorno bruto sobre a mídia. ROAS não é lucro: não desconta custos.') +
-      kpi(roiLabel, f.roi === null ? '—' : (f.roi > 0 ? '+' : '') + pct(f.roi, 0), roiSub, f.roi === null ? '' : (f.roi >= 0 ? 'pos' : 'neg'), 'ROI = (faturamento − custos variáveis − custos fixos) ÷ custos fixos. Custos fixos = anúncios + honorários incluídos + outros custos.') +
-      kpi('Resultado financeiro estimado', money(f.result), 'Faturamento − custos considerados', f.result >= 0 ? 'pos' : 'neg') +
-      kpi('Custo por venda', f.costPerSale === null ? 'Sem vendas' : money(f.costPerSale), 'Investimento ÷ vendas dos anúncios') +
-      kpi('Ponto de equilíbrio', be === null ? '—' : qty(be) + ' ' + plural(be, 'venda', 'vendas'), be === null ? 'Informe um ticket médio' : 'Para cobrir os custos do mês', '', 'Vendas necessárias para que o faturamento, já descontados os custos variáveis, cubra os custos fixos selecionados.');
+      kpi('Faturamento bruto projetado', money(fi.adRevenue), qty(fi.adSales) + ' ' + plural(fi.adSales, 'venda', 'vendas') + ' × ' + money(fi.ticket), 'pos') +
+      kpi('ROAS hipotético', xr(fi.roas), 'Faturamento ÷ investimento em anúncios', 'pos', 'Retorno bruto sobre a mídia. ROAS não é lucro.') +
+      kpi('Custo por venda', fi.costPerSale === null ? 'Sem vendas' : money(fi.costPerSale), 'Investimento ÷ vendas dos anúncios') +
+      kpi('Custo por lead (CPL)', money(f.costPerLead), 'Referência das campanhas de contatos') +
+      kpi('CPL qualificado das campanhas', money(f.contactQualifiedCost), 'Verba de contatos ÷ qualificados dessas campanhas', '', 'Considera só a verba e os leads das campanhas de contatos.') +
+      kpi('Custo global por qualificado', money(f.globalQualifiedCost), 'Investimento total ÷ total de qualificados', '', 'Inclui a verba de seguidores e as conversas da captação.') +
+      kpi('ROI estimado', fi.roi === null ? '—' : (fi.roi > 0 ? '+' : '') + pct(fi.roi, 0), fi.roi === null ? 'Informe a margem de contribuição em Configurações' : 'Resultado ÷ custos fixos considerados', fi.roi === null ? '' : (fi.roi >= 0 ? 'pos' : 'neg'), 'Faturamento bruto não é lucro. O ROI só aparece com custos variáveis (margem de contribuição) informados.') +
+      kpi(fi.breakEvenSimplified ? 'Equilíbrio simplificado' : 'Ponto de equilíbrio', be === null ? '—' : qty(be) + ' ' + plural(be, 'venda', 'vendas'), fi.breakEvenSimplified ? 'Sem margem informada: cobre só os custos fixos' : 'Pela margem de contribuição por venda', '', 'Vendas necessárias para cobrir anúncios, honorários incluídos e outros custos, usando a margem de contribuição de cada venda.');
 
-    var pillCls = f.status;
-    $('status-pill').innerHTML = '<span class="pill ' + pillCls + '">' + STATUS[f.status] + (f.status === 'near' && f.result >= 0 ? ' (levemente acima)' : (f.status === 'near' && f.result < 0 ? ' (levemente abaixo)' : '')) + '</span>';
-
+    $('status-pill').innerHTML = '<span class="pill ' + fi.status + '">' + STATUS[fi.status] + '</span>';
     var text;
     if (be === null) text = 'Informe um ticket médio maior que zero para calcular o ponto de equilíbrio.';
     else if (be === 0) text = 'Nenhum custo fixo considerado: qualquer venda já gera resultado positivo.';
-    else if (f.adSales >= be) text = 'Equilíbrio atingido: ' + qty(f.adSales) + ' ' + plural(f.adSales, 'venda projetada', 'vendas projetadas') + ' para ' + qty(be) + ' ' + plural(be, 'necessária', 'necessárias') + '.';
-    else text = qty(f.adSales) + ' de ' + qty(be) + ' vendas necessárias para atingir o equilíbrio.';
-    $('breakeven').innerHTML = '<span class="hint" style="color:var(--fg)">' + text + '</span><span class="hint">' + pct(f.breakEvenProgress * 100, 0) + '</span>' +
-      '<div class="be-track"><div class="be-fill ' + (f.status === 'below' ? 'neg' : f.status === 'near' ? 'near' : '') + '" style="width:' + (f.breakEvenProgress * 100) + '%"></div></div>';
+    else if (fi.adSales >= be) text = 'Equilíbrio atingido: ' + qty(fi.adSales) + ' ' + plural(fi.adSales, 'venda projetada', 'vendas projetadas') + ' para ' + qty(be) + ' ' + plural(be, 'necessária', 'necessárias') + '.';
+    else text = qty(fi.adSales) + ' de ' + qty(be) + ' vendas necessárias para atingir o equilíbrio.';
+    $('breakeven').innerHTML = '<span class="hint" style="color:var(--fg)">' + text + '</span><span class="hint">' + pct(fi.breakEvenProgress * 100, 0) + '</span>' +
+      '<div class="be-track"><div class="be-fill ' + (fi.status === 'below' ? 'neg' : fi.status === 'near' ? 'near' : '') + '" style="width:' + (fi.breakEvenProgress * 100) + '%"></div></div>';
   }
 
-  function scenarioOptions(includeSelected, selectedVal) {
-    var c = cfg(), opts = [];
-    if (includeSelected) opts.push(['selected', 'Cenário selecionado (' + model.scenario.name + ')']);
-    opts.push(['castelo', c.castelo.name + (/TDE|Elite/i.test(c.castelo.name) ? '' : ' (TDE)')]);
-    c.scenarios.forEach(function (s) { opts.push([s.id, s.name]); });
-    return opts.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (o[0] === selectedVal ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('');
-  }
-  function renderSelects() {
-    var b = scenarioOptions(true, sim.compareBaseId), i = scenarioOptions(false, model.compare.improvedScenario.id);
-    if ($('sel-base')._sig !== b) { $('sel-base').innerHTML = b; $('sel-base')._sig = b; }
-    if ($('sel-imp')._sig !== i) { $('sel-imp').innerHTML = i; $('sel-imp')._sig = i; }
-    $('sel-base').value = E.findScenario(cfg(), sim.compareBaseId) || sim.compareBaseId === 'selected' ? sim.compareBaseId : 'selected';
-    $('sel-imp').value = model.compare.improvedScenario.id;
+  function renderCosts() {
+    var fi = model.financial, fin = model.fin, feeRaw = Number(fin.agencyFee) || 0;
+    $('costs-list').innerHTML =
+      '<div class="kv"><span>Investimento em anúncios</span><b>' + money(fi.investment) + '</b></div>' +
+      '<div class="kv" style="margin-top:6px"><span>Honorários' + (fin.includeAgencyFee ? '' : ' (não incluídos)') + '</span><b>' + (feeRaw > 0 ? money(feeRaw) : 'Não informado') + '</b></div>' +
+      '<div class="kv" style="margin-top:6px"><span>Outros custos fixos</span><b>' + money(fi.otherCosts) + '</b></div>' +
+      '<div class="kv" style="margin-top:6px"><span>Custos variáveis (' + pct(fi.variableCostPct * 100) + ' · margem ' + pct(fi.contributionMargin * 100) + ')</span><b>' + money(fi.variableCosts) + '</b></div>' +
+      '<div class="kv" style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px"><span>Resultado estimado no mês' + (fi.costsInformed ? '' : ' (sem margem informada)') + '</span><b style="color:' + (fi.result >= 0 ? 'var(--gold)' : 'var(--red)') + '">' + money(fi.result) + '</b></div>';
   }
 
-  function dRow(label, a, b, fmt, higherIsBetter) {
-    var d = b - a, cls = '';
-    var dTxt = '';
-    if (isFinite(d) && Math.abs(d) > 1e-9) {
-      var good = higherIsBetter ? d > 0 : d < 0;
-      cls = good ? '' : ' neg';
-      var pc = a > 0 ? ' · ' + (d > 0 ? '+' : '') + pct(d / a * 100, 0) : '';
-      dTxt = '<span class="delta' + cls + '">(' + (d > 0 ? '+' : '') + fmt(d) + pc + ')</span>';
-    }
-    return [label, fmt(a), fmt(b) + dTxt];
+  function deltaSpan(a, b, fmt, higherIsBetter) {
+    var d = b - a;
+    if (!isFinite(d) || Math.abs(d) < 1e-9) return '';
+    var good = higherIsBetter ? d > 0 : d < 0;
+    var pc = a > 0 ? ' · ' + (d > 0 ? '+' : '') + pct(d / a * 100, 0) : '';
+    return '<span class="delta' + (good ? '' : ' neg') + '">(' + (d > 0 ? '+' : '') + fmt(d) + pc + ')</span>';
   }
   function renderCompare() {
     var c = model.compare, B = c.base, I = c.improved;
     var rows = [
-      dRow('CPL', B.funnel.cpl, I.funnel.cpl, money, false),
-      dRow('Leads', B.funnel.leads, I.funnel.leads, qty, true),
-      dRow('Agendamentos', B.funnel.appointments, I.funnel.appointments, qty, true),
-      dRow('Comparecimentos', B.funnel.shows, I.funnel.shows, qty, true),
-      dRow('Vendas', B.funnel.sales, I.funnel.sales, qty, true),
-      dRow('Faturamento', B.fin.adRevenue, I.fin.adRevenue, money, true)
+      ['Investimento', money(B.funnel.investment), money(I.funnel.investment)],
+      ['CPL dos contatos', money(B.funnel.cpl), money(I.funnel.cpl) + deltaSpan(B.funnel.cpl, I.funnel.cpl, money, false)],
+      ['Leads recebidos', qty(B.funnel.leads), qty(I.funnel.leads) + deltaSpan(B.funnel.leads, I.funnel.leads, qty, true)],
+      ['Leads qualificados', qty(B.funnel.qualified), qty(I.funnel.qualified) + deltaSpan(B.funnel.qualified, I.funnel.qualified, qty, true)],
+      ['Vendas', qty(B.funnel.sales), qty(I.funnel.sales) + deltaSpan(B.funnel.sales, I.funnel.sales, qty, true)],
+      ['Faturamento estimado', money(B.fin.adRevenue), money(I.fin.adRevenue) + deltaSpan(B.fin.adRevenue, I.fin.adRevenue, money, true)],
+      ['ROAS projetado', xr(B.fin.roas), xr(I.fin.roas)]
     ];
-    function panel(cls, title, ic, sc, side, roas) {
-      return '<div class="panel ' + cls + '"><h3>' + icon(ic, 16) + title + '</h3><p class="ps">' + esc(sc.name) + ' · investimento de ' + money(model.investment) + '/mês</p><dl>' +
-        rows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + r[side] + '</dd>'; }).join('') +
-        '<dt>ROAS</dt><dd>' + xr(roas) + (side === 2 && c.roasMultiple !== null && Math.abs(c.roasMultiple - 1) > 1e-9 ? '<span class="delta' + (c.roasMultiple < 1 ? ' neg' : '') + '">(' + nf(1, 1).format(c.roasMultiple) + 'x mais)</span>' : '') + '</dd></dl></div>';
-    }
-    $('cmp').innerHTML = panel('sem', 'Sem TDE', 'x', c.baseScenario, 1, B.fin.roas) + panel('com', 'Com TDE', 'check', c.improvedScenario, 2, I.fin.roas);
+    function dl(side) { return '<dl>' + rows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + r[side] + '</dd>'; }).join('') + '</dl>'; }
+    var bf = B.funnel;
+    var sem = '<div class="panel sem"><h3>' + icon('x', 16) + 'Sem Método TDE</h3><p class="ps">' + esc(cfg().independent.description) + '</p>' + dl(1) +
+      '<dl class="opp"><span class="opp-h">Oportunidades não convertidas</span>' +
+      '<dt>Leads não qualificados</dt><dd>' + qty(bf.notQualified) + '</dd>' +
+      '<dt>Qualificados que não fecharam</dt><dd>' + qty(bf.qualifiedNotClosed) + '</dd>' +
+      '<dt>Conversão geral</dt><dd>' + rateTxt(bf.conversionRate) + '</dd></dl></div>';
+    var com = '<div class="panel com"><h3>' + icon('check', 16) + 'Com Método TDE</h3><p class="ps">Cenário ' + esc(model.scenario.name) + ' · mesmos parâmetros da simulação principal</p>' + dl(2) +
+      '<dl class="opp" style="border-top-color:var(--gold-line)"><span class="opp-h" style="color:var(--gold)">Funil com o método</span>' +
+      '<dt>Taxa de qualificação</dt><dd>' + rateTxt(I.funnel.qualificationRate) + '</dd>' +
+      '<dt>Fechamento sobre qualificados</dt><dd>' + rateTxt(I.funnel.closeRate) + '</dd>' +
+      '<dt>Conversão geral</dt><dd>' + rateTxt(I.funnel.conversionRate) + '</dd></dl></div>';
+    setHTML($('cmp'), sem + com);
     $('cmp-kpis').innerHTML =
-      kpi('Vendas adicionais', (c.extraSales > 0 ? '+' : '') + qty(c.extraSales), 'por mês', c.extraSales >= 0 ? 'pos' : 'neg') +
-      kpi('Faturamento incremental', signedMoney(c.incrementalRevenue), 'por mês', c.incrementalRevenue >= 0 ? 'pos' : 'neg') +
-      kpi('Redução no CPL', money(c.cplReduction), c.cplReductionPct === null ? '—' : pct(c.cplReductionPct, 1) + ' mais barato por lead', c.cplReduction >= 0 ? 'pos' : 'neg') +
-      kpi('Eficiência (variação do ROAS)', c.roasMultiple === null ? (c.roasDelta === null ? '—' : (c.roasDelta > 0 ? '+' : '') + nf(1, 1).format(c.roasDelta) + 'x') : nf(1, 1).format(c.roasMultiple) + 'x mais ROAS',
-        'De ' + xr(B.fin.roas) + ' para ' + xr(I.fin.roas) + (c.roasDelta === null ? '' : ' (' + (c.roasDelta > 0 ? '+' : '') + nf(1, 1).format(c.roasDelta) + 'x)'), c.roasDelta === null ? '' : (c.roasDelta >= 0 ? 'pos' : 'neg'));
+      kpi('Vendas adicionais', signedQty(c.extraSales), 'por mês · ' + signedQty(c.extraLeads) + ' leads estimados', c.extraSales >= 0 ? 'pos' : 'neg') +
+      kpi('Faturamento extra', signedMoney(c.incrementalRevenue), 'por mês', c.incrementalRevenue >= 0 ? 'pos' : 'neg') +
+      kpi('Redução do CPL', money(c.cplReduction), c.cplReductionPct === null ? '—' : pct(c.cplReductionPct, 0) + ' menor nas campanhas de contatos', c.cplReduction >= 0 ? 'pos' : 'neg') +
+      kpi('Ganho de eficiência comercial', c.conversionRelativePct === null ? '—' : (c.conversionRelativePct > 0 ? '+' : '') + pct(c.conversionRelativePct, 0),
+        rateTxt(c.conversionBase) + ' → ' + rateTxt(c.conversionImproved) + ' de conversão geral (' + (c.conversionDeltaPP >= 0 ? '+' : '') + nf(1, 1).format(c.conversionDeltaPP) + ' p.p.)', c.conversionDeltaPP >= 0 ? 'pos' : 'neg');
   }
 
   function renderProjectionControls() {
     var p = sim.projection;
     setPressed('seg-months', 'data-months', p.months === 12 ? 12 : 6);
-    setSwitch('sw-growth', p.growthEnabled);
-    setSwitch('sw-ramp', p.rampEnabled);
-    $('in-growth').disabled = !p.growthEnabled;
-    $('in-ramp').disabled = !p.rampEnabled;
-    $('in-eff-start').disabled = !p.rampEnabled;
+    setSwitch('sw-growth', p.growthEnabled); setSwitch('sw-ramp', p.rampEnabled);
+    $('in-growth').disabled = !p.growthEnabled; $('in-ramp').disabled = !p.rampEnabled; $('in-eff-start').disabled = !p.rampEnabled;
     setPressed('seg-metric', 'data-metric', sim.chartMetric);
   }
 
@@ -1267,33 +1392,32 @@ td.dim { color: var(--dim); }
   function niceMax(v) {
     if (!(v > 0)) return 1;
     var e = Math.pow(10, Math.floor(Math.log10(v))), f = v / e;
-    var n = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10;
-    return n * e;
+    return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * e;
   }
+  function intAxis(v) { return nf(0, 1).format(v); }
   function chartData() {
-    var P = model.projection, rows = P.rows, labels = rows.map(function (r) { return 'Mês ' + r.month; });
-    var m = sim.chartMetric;
-    if (m === 'investment') return { type: 'bar', labels: labels, fmt: money, axis: moneyC, series: [{ name: 'Investimento em anúncios', color: 'var(--gold)', values: rows.map(function (r) { return r.investment; }) }] };
-    if (m === 'sales') return { type: 'bar', stacked: true, labels: labels, fmt: qty, axis: function (v) { return nf(0, 1).format(v); }, series: [
-      { name: 'Vendas dos anúncios', color: 'var(--gold)', values: rows.map(function (r) { return r.adSales; }) },
-      { name: 'Vendas das alavancas', color: 'var(--lever)', values: rows.map(function (r) { return r.leverSales; }) }] };
-    if (m === 'roas') return { type: 'line', labels: labels, fmt: xr, axis: function (v) { return nf(0, 1).format(v) + 'x'; }, series: [{ name: 'ROAS publicitário', color: 'var(--gold)', values: rows.map(function (r) { return r.roas; }) }] };
-    if (m === 'compare') {
-      var cp = model.compareProjection;
-      return { type: 'line', labels: labels, fmt: money, axis: moneyC, series: [
-        { name: 'Sem TDE · ' + model.compare.baseScenario.name, color: 'var(--muted)', values: cp.base.rows.map(function (r) { return r.adRevenue; }) },
-        { name: 'Com TDE · ' + model.compare.improvedScenario.name, color: 'var(--gold)', values: cp.improved.rows.map(function (r) { return r.adRevenue; }) }] };
+    var rows = model.projection.rows, labels = rows.map(function (r) { return 'Mês ' + r.month; });
+    function s(name, color, key, src) { return { name: name, color: color, values: (src || rows).map(function (r) { return r[key]; }) }; }
+    switch (sim.chartMetric) {
+      case 'investment': return { type: 'bar', labels: labels, fmt: money, axis: moneyC, series: [s('Investimento em anúncios', 'var(--gold)', 'investment')] };
+      case 'followers': return { type: 'bar', labels: labels, fmt: qty, axis: intAxis, series: [s('Novos seguidores', 'var(--gold)', 'followers')] };
+      case 'leads': return { type: 'bar', labels: labels, fmt: qty, axis: intAxis, series: [s('Leads recebidos', 'var(--gold)', 'leads')] };
+      case 'qualified': return { type: 'bar', labels: labels, fmt: qty, axis: intAxis, series: [s('Leads qualificados', 'var(--gold)', 'qualified')] };
+      case 'sales': return { type: 'bar', stacked: true, labels: labels, fmt: qty, axis: intAxis, series: [s('Vendas dos anúncios', 'var(--gold)', 'adSales'), s('Vendas das alavancas', 'var(--lever)', 'leverSales')] };
+      case 'roas': return { type: 'line', labels: labels, fmt: xr, axis: function (v) { return nf(0, 1).format(v) + 'x'; }, series: [s('ROAS publicitário', 'var(--gold)', 'roas')] };
+      case 'compare':
+        var cp = model.compareProjection;
+        return { type: 'line', labels: labels, fmt: money, axis: moneyC, series: [
+          s('Sem Método TDE', 'var(--muted)', 'adRevenue', cp.base.rows), s('Com Método TDE · ' + model.scenario.name, 'var(--gold)', 'adRevenue', cp.improved.rows)] };
+      default: return { type: 'bar', stacked: true, labels: labels, fmt: money, axis: moneyC, series: [s('Faturamento dos anúncios', 'var(--gold)', 'adRevenue'), s('Faturamento das alavancas', 'var(--lever)', 'leverRevenue')] };
     }
-    return { type: 'bar', stacked: true, labels: labels, fmt: money, axis: moneyC, series: [
-      { name: 'Faturamento dos anúncios', color: 'var(--gold)', values: rows.map(function (r) { return r.adRevenue; }) },
-      { name: 'Faturamento das alavancas', color: 'var(--lever)', values: rows.map(function (r) { return r.leverRevenue; }) }] };
   }
   var lastChart = null;
   function renderChart() {
     var d = chartData(); lastChart = d;
-    var W = 820, H = 300, L = 78, R = 14, T = 14, B = 30, cw = W - L - R, ch = H - T - B, n = d.labels.length;
+    var W = 820, H = 300, L = 78, R = 14, T = 14, B = 30, cw = W - L - R, ch = H - T - B, n = d.labels.length, i;
     var max = 0;
-    for (var i = 0; i < n; i++) {
+    for (i = 0; i < n; i++) {
       if (d.stacked) max = Math.max(max, d.series.reduce(function (a, s) { return a + (s.values[i] || 0); }, 0));
       else d.series.forEach(function (s) { max = Math.max(max, s.values[i] || 0); });
     }
@@ -1305,16 +1429,14 @@ td.dim { color: var(--dim); }
       out.push('<line x1="' + L + '" x2="' + (W - R) + '" y1="' + yy + '" y2="' + yy + '" style="stroke:var(--line-2)" stroke-dasharray="' + (t ? '3 4' : '') + '"/>');
       out.push('<text x="' + (L - 10) + '" y="' + (yy + 4) + '" text-anchor="end" style="fill:var(--dim);font-size:11px">' + esc(d.axis(v)) + '</text>');
     }
-    d.labels.forEach(function (lb, i) {
-      out.push('<text x="' + (L + gw * i + gw / 2) + '" y="' + (H - 8) + '" text-anchor="middle" style="fill:var(--dim);font-size:11px">' + (n > 6 ? 'M' + (i + 1) : lb) + '</text>');
-    });
+    d.labels.forEach(function (lb, k) { out.push('<text x="' + (L + gw * k + gw / 2) + '" y="' + (H - 8) + '" text-anchor="middle" style="fill:var(--dim);font-size:11px">' + (n > 6 ? 'M' + (k + 1) : lb) + '</text>'); });
     if (d.type === 'bar') {
       var bw = Math.min(46, gw * 0.58);
       for (i = 0; i < n; i++) {
         var acc = 0, x = L + gw * i + (gw - bw) / 2;
         d.series.forEach(function (s, si) {
           var v = s.values[i] || 0; if (v <= 0) return;
-          var y0 = y(acc), y1 = y(acc + v), top = si === d.series.length - 1 || !d.series.slice(si + 1).some(function (z) { return z.values[i] > 0; });
+          var y0 = y(acc), y1 = y(acc + v), top = !d.series.slice(si + 1).some(function (z) { return z.values[i] > 0; });
           out.push('<rect x="' + x + '" y="' + y1 + '" width="' + bw + '" height="' + Math.max(0, y0 - y1) + '" rx="' + (top ? 4 : 0) + '" style="fill:' + s.color + '"/>');
           acc += v;
         });
@@ -1322,7 +1444,7 @@ td.dim { color: var(--dim); }
     } else {
       d.series.forEach(function (s) {
         var pts = [];
-        s.values.forEach(function (v, i) { if (v !== null && isFinite(v)) pts.push([L + gw * i + gw / 2, y(v)]); });
+        s.values.forEach(function (v, k) { if (ok(v)) pts.push([L + gw * k + gw / 2, y(v)]); });
         if (pts.length > 1) out.push('<polyline fill="none" stroke-width="2.5" stroke-linejoin="round" style="stroke:' + s.color + '" points="' + pts.map(function (p) { return p.join(','); }).join(' ') + '"/>');
         pts.forEach(function (p) { out.push('<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3.5" style="fill:var(--card);stroke:' + s.color + '" stroke-width="2"/>'); });
       });
@@ -1334,7 +1456,7 @@ td.dim { color: var(--dim); }
   function bindChartTip() {
     var wrap = $('chart');
     wrap.addEventListener('mousemove', function (e) {
-      var hit = e.target.closest && e.target.closest('.hit'); var tipEl = $('ctip'); if (!tipEl) return;
+      var hit = e.target.closest && e.target.closest('.hit'), tipEl = $('ctip'); if (!tipEl) return;
       if (!hit || !lastChart) { tipEl.hidden = true; return; }
       var i = Number(hit.getAttribute('data-i')), d = lastChart;
       var rows = d.series.map(function (s) { return '<div><span>' + esc(s.name) + '</span><span>' + d.fmt(s.values[i]) + '</span></div>'; }).join('');
@@ -1349,17 +1471,24 @@ td.dim { color: var(--dim); }
 
   function renderTable() {
     var P = model.projection, ramp = sim.projection.rampEnabled;
-    var head = ['Mês', 'Investimento', ramp ? 'Eficiência' : null, 'Leads', 'Agend.', 'Compar.', 'Vendas anúncios', 'Vendas alavancas', 'Vendas totais', 'Fat. anúncios', 'Fat. alavancas', 'Fat. total', 'ROAS anúncios', 'Resultado consolidado'].filter(Boolean);
-    var body = P.rows.map(function (r) {
-      return '<tr>' + [r.month, money0(r.investment), ramp ? pct(r.efficiency * 100, 0) : null, qty(r.leads), qty(r.appointments), qty(r.shows), qty(r.adSales),
-        '<span class="' + (r.leverSales ? '' : 'dim') + '">' + qty(r.leverSales) + '</span>', qty(r.totalSales), money0(r.adRevenue), money0(r.leverRevenue), money0(r.totalRevenue), xr(r.roas),
-        '<span style="color:' + (r.totalResult >= 0 ? 'var(--gold)' : 'var(--red)') + '">' + money0(r.totalResult) + '</span>']
-        .filter(function (v) { return v !== null; }).map(function (v, k) { return '<td' + ((k === 6 + (ramp ? 1 : 0) || k === 9 + (ramp ? 1 : 0)) ? ' class="lv"' : '') + '>' + v + '</td>'; }).join('') + '</tr>';
-    }).join('');
-    var t = P.totals;
-    var tot = '<tr class="total">' + ['Total', money0(t.investment), ramp ? '' : null, qty(t.leads), qty(t.appointments), qty(t.shows), qty(t.adSales), qty(t.leverSales), qty(t.totalSales),
-      money0(t.adRevenue), money0(t.leverRevenue), money0(t.totalRevenue), xr(t.roas), money0(t.totalResult)].filter(function (v) { return v !== null; }).map(function (v) { return '<td>' + v + '</td>'; }).join('') + '</tr>';
-    $('proj-table').innerHTML = '<thead><tr>' + head.map(function (h) { return '<th scope="col">' + h + '</th>'; }).join('') + '</tr></thead><tbody>' + body + tot + '</tbody>';
+    var cols = [
+      ['Mês', function (r) { return r.month; }, 'Total'],
+      ['Investimento', function (r) { return money0(r.investment); }, money0(P.totals.investment)],
+      ramp ? ['Eficiência', function (r) { return pct(r.efficiency * 100, 0); }, ''] : null,
+      ['Seguidores', function (r) { return qty(r.followers); }, qty(P.totals.followers)],
+      ['Leads', function (r) { return qty(r.leads); }, qty(P.totals.leads)],
+      ['Qualificados', function (r) { return qty(r.qualified); }, qty(P.totals.qualified)],
+      ['Vendas anúncios', function (r) { return qty(r.adSales); }, qty(P.totals.adSales)],
+      ['Vendas alavancas', function (r) { return '<span class="lvc">' + qty(r.leverSales) + '</span>'; }, qty(P.totals.leverSales), 'lv'],
+      ['Vendas totais', function (r) { return qty(r.totalSales); }, qty(P.totals.totalSales)],
+      ['Fat. anúncios', function (r) { return money0(r.adRevenue); }, money0(P.totals.adRevenue)],
+      ['Fat. total', function (r) { return money0(r.totalRevenue); }, money0(P.totals.totalRevenue)],
+      ['ROAS anúncios', function (r) { return xr(r.roas); }, xr(P.totals.roas)],
+      ['Resultado consolidado', function (r) { return '<span style="color:' + (r.totalResult >= 0 ? 'var(--gold)' : 'var(--red)') + '">' + money0(r.totalResult) + '</span>'; }, money0(P.totals.totalResult)]
+    ].filter(Boolean);
+    $('proj-table').innerHTML = '<thead><tr>' + cols.map(function (c) { return '<th scope="col">' + c[0] + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      P.rows.map(function (r) { return '<tr>' + cols.map(function (c) { return '<td' + (c[3] ? ' class="' + c[3] + '"' : '') + '>' + c[1](r) + '</td>'; }).join('') + '</tr>'; }).join('') +
+      '<tr class="total">' + cols.map(function (c) { return '<td>' + c[2] + '</td>'; }).join('') + '</tr></tbody>';
   }
 
   var LEVER_ICONS = { prospeccao: 'send', social: 'share', indicacoes: 'users' };
@@ -1374,9 +1503,8 @@ td.dim { color: var(--dim); }
       var on = !!sim.leversEnabled[l.id];
       var tot = P.totals.levers.filter(function (x) { return x.id === l.id; })[0] || { sales: 0, revenue: 0, cost: 0 };
       var mat = Math.round(l.maturationMonths);
-      var ticketTxt = l.ticket > 0 ? ' · ticket ' + money0(l.ticket) : '';
-      var costTxt = l.monthlyCost > 0 ? ' · custo ' + money0(l.monthlyCost) + '/mês' : '';
-      var rule = '+' + qty(l.salesPerMonth) + ' ' + plural(l.salesPerMonth, 'venda', 'vendas') + '/mês ' + (mat > 0 ? 'após ' + mat + ' ' + plural(mat, 'mês', 'meses') + ' de maturação' : 'desde o primeiro mês') + ticketTxt + costTxt;
+      var rule = '+' + qty(l.salesPerMonth) + ' ' + plural(l.salesPerMonth, 'venda', 'vendas') + '/mês ' + (mat > 0 ? 'após ' + mat + ' ' + plural(mat, 'mês', 'meses') + ' de maturação' : 'desde o primeiro mês') +
+        (l.ticket > 0 ? ' · ticket ' + money0(l.ticket) : '') + (l.monthlyCost > 0 ? ' · custo ' + money0(l.monthlyCost) + '/mês' : '');
       var tk = l.ticket > 0 ? l.ticket : model.ticket;
       var contrib = on ? '<div class="contrib">' +
         '<span class="chip">Mês 1: <b>' + (mat > 0 ? 'sem vendas (maturação)' : '+' + qty(l.salesPerMonth)) + '</b></span>' +
@@ -1392,35 +1520,36 @@ td.dim { color: var(--dim); }
     });
     setHTML($('levers'), html);
 
-    var L = model.levers;
+    var L = model.levers, T = P.totals;
+    function line(label, value, color) { return '<div class="kv"><span>' + label + '</span><b' + (color ? ' style="color:' + color + '"' : '') + '>' + value + '</b></div>'; }
     function block(title, F) {
-      return '<div class="box"><h5>' + title + '</h5>' +
-        '<div class="kv"><span>Vendas dos anúncios</span><b>' + qty(F.adSales) + '</b></div>' +
-        '<div class="kv"><span>Vendas das alavancas</span><b style="color:var(--lever)">' + qty(F.leverSales) + '</b></div>' +
-        '<div class="kv"><span>Total de vendas</span><b>' + qty(F.totalSales) + '</b></div>' +
-        '<div class="kv tot"><span>Faturamento combinado</span><b>' + money(F.totalRevenue) + '</b></div>' +
-        '<div class="kv"><span>Resultado consolidado</span><b style="color:' + (F.totalResult >= 0 ? 'var(--gold)' : 'var(--red)') + '">' + money(F.totalResult) + '</b></div></div>';
+      return '<div class="box"><h5>' + title + '</h5>' + line('Vendas dos anúncios', qty(F.adSales)) + line('Vendas das alavancas', qty(F.leverSales), 'var(--lever)') +
+        line('Total de vendas', qty(F.totalSales)) + '<div class="kv tot"><span>Faturamento combinado</span><b>' + money(F.totalRevenue) + '</b></div>' +
+        line('Resultado consolidado', money(F.totalResult), F.totalResult >= 0 ? 'var(--gold)' : 'var(--red)') + '</div>';
     }
-    var T = P.totals;
-    var acc = '<div class="box"><h5>Acumulado em ' + months + ' meses</h5>' +
-      '<div class="kv"><span>Vendas dos anúncios</span><b>' + qty(T.adSales) + '</b></div>' +
-      '<div class="kv"><span>Vendas das alavancas</span><b style="color:var(--lever)">' + qty(T.leverSales) + '</b></div>' +
-      '<div class="kv"><span>Total de vendas</span><b>' + qty(T.totalSales) + '</b></div>' +
-      '<div class="kv tot"><span>Faturamento combinado</span><b>' + money(T.totalRevenue) + '</b></div>' +
-      '<div class="kv"><span>ROAS publicitário</span><b>' + xr(T.roas) + '</b></div>' +
-      '<div class="kv"><span>Retorno consolidado ' + tip('Faturamento combinado ÷ custos fixos totais (anúncios, honorários incluídos, outros custos e custos das alavancas).') + '</span><b>' + xr(T.consolidatedReturn) + '</b></div>' +
-      '<div class="kv"><span>Resultado consolidado</span><b style="color:' + (T.totalResult >= 0 ? 'var(--gold)' : 'var(--red)') + '">' + money(T.totalResult) + '</b></div></div>';
+    var acc = '<div class="box"><h5>Acumulado em ' + months + ' meses</h5>' + line('Vendas dos anúncios', qty(T.adSales)) + line('Vendas das alavancas', qty(T.leverSales), 'var(--lever)') +
+      line('Total de vendas', qty(T.totalSales)) + '<div class="kv tot"><span>Faturamento combinado</span><b>' + money(T.totalRevenue) + '</b></div>' +
+      line('ROAS publicitário', xr(T.roas)) + line('Retorno consolidado ' + tip('Faturamento combinado ÷ custos fixos totais (anúncios, honorários incluídos, outros custos e custos das alavancas).'), xr(T.consolidatedReturn)) +
+      line('Resultado consolidado', money(T.totalResult), T.totalResult >= 0 ? 'var(--gold)' : 'var(--red)') + '</div>';
     $('cons').innerHTML = block('Resultado mensal atual (mês 1)', L.now) + block('Mensal após maturação' + (L.maturationMonth > 1 ? ' (mês ' + L.maturationMonth + ')' : ''), L.mature) + acc;
   }
 
   // ------------------------------------------------------------ configurações
-  var TABS = [['financeiro', 'Parâmetros financeiros'], ['comerciais', 'Taxas comerciais'], ['castelo', 'Método TDE'], ['alavancas', 'Alavancas'], ['projecao', 'Projeção']];
-  var currentTab = 'financeiro';
-
-  function getPath(o, path) { return path.split('.').reduce(function (a, k) { return a == null ? a : a[k]; }, o); }
+  var TABS = [['investimento', 'Investimento'], ['aquisicao', 'Aquisição'], ['comercial', 'Comercial'], ['semtde', 'Comparativo Sem TDE'], ['projecao', 'Projeção'], ['alavancas', 'Alavancas'], ['financeiro', 'Financeiro']];
+  var currentTab = 'investimento';
+  // campos vinculados: editar um atualiza o complementar (soma 100%)
+  var LINKED = {
+    'defaults.contactsShare': { get: function (d) { return 1 - d.defaults.followersShare; }, set: function (d, v) { d.defaults.followersShare = Math.round((1 - v) * 1e6) / 1e6; }, partner: 'defaults.followersShare' },
+    'defaults.followersShare': { partner: 'defaults.contactsShare' },
+    'independent.contactsShare': { get: function (d) { return 1 - d.independent.followersShare; }, set: function (d, v) { d.independent.followersShare = Math.round((1 - v) * 1e6) / 1e6; }, partner: 'independent.followersShare' },
+    'independent.followersShare': { partner: 'independent.contactsShare' },
+    'financial.contributionMargin': { get: function (d) { return 1 - d.financial.variableCostPct; }, set: function (d, v) { d.financial.variableCostPct = Math.round((1 - v) * 1e6) / 1e6; }, partner: 'financial.variableCostPct' },
+    'financial.variableCostPct': { partner: 'financial.contributionMargin' }
+  };
+  function getPath(o, path) { var L = LINKED[path]; if (L && L.get) return L.get(o); return path.split('.').reduce(function (a, k) { return a == null ? a : a[k]; }, o); }
   function setPath(o, path, v) {
-    var ks = path.split('.'), last = ks.pop();
-    var t = ks.reduce(function (a, k) { return a[k]; }, o); t[last] = v;
+    var L = LINKED[path]; if (L && L.set) { L.set(o, v); return; }
+    var ks = path.split('.'), last = ks.pop(); var t = ks.reduce(function (a, k) { return a[k]; }, o); t[last] = v;
   }
   function fid(path) { return 'cfg-' + path.replace(/\./g, '-'); }
 
@@ -1439,84 +1568,94 @@ td.dim { color: var(--dim); }
     return '<div class="field"' + (opt.wide ? ' style="grid-column:1/-1"' : '') + '><label class="lbl" for="' + id + '">' + label + (opt.tip ? ' ' + tip(opt.tip) : '') + '</label>' + input +
       (opt.hint ? '<span class="hint">' + opt.hint + '</span>' : '') + '<span class="err" id="err-' + id + '"></span></div>';
   }
-
-  function scenarioFields(prefix) {
-    return F(prefix + '.cpl', 'CPL (custo por lead)', 'money', { positive: true }) +
-      F(prefix + '.scheduleRate', 'Lead → agendamento', 'pct') +
-      F(prefix + '.showRate', 'Comparecimento', 'pct') +
-      F(prefix + '.closeRate', 'Fechamento sobre comparecimentos', 'pct');
-  }
+  var ONOFF = [['true', 'Ativado'], ['false', 'Desativado']];
 
   function tabHTML(tab) {
-    var d = draft;
-    if (tab === 'financeiro') {
-      return '<div class="sec-t">Valores iniciais de cada nova simulação</div><div class="fgrid">' +
-        F('defaults.investment', 'Investimento padrão', 'money') + F('defaults.ticket', 'Ticket médio padrão', 'money') +
-        F('defaults.cpl', 'CPL padrão para novos cenários', 'money', { positive: true }) +
+    var d = draft, hr = E.historyRates(d.acquisition);
+    if (tab === 'investimento') {
+      return '<div class="sec-t">Valores de cada nova simulação</div><div class="fgrid">' +
+        F('defaults.investment', 'Investimento mensal padrão', 'money') + F('defaults.ticket', 'Ticket médio padrão', 'money') +
+        F('defaults.followersShare', 'Verba para seguidores', 'pct') + F('defaults.contactsShare', 'Verba para contatos', 'pct') +
         F('defaults.scenarioId', 'Cenário inicial', 'select', { options: d.scenarios.map(function (s) { return [s.id, s.name]; }) }) + '</div>' +
-        '<div class="sec-t">Custos considerados no ROI e no ponto de equilíbrio</div><div class="fgrid">' +
-        F('financial.variableCostPct', 'Custos variáveis (% do faturamento)', 'pct', { tip: 'Material, taxas de cartão, comissões e impostos sobre cada venda.' }) +
-        F('financial.agencyFee', 'Honorários mensais da agência', 'money') +
-        F('financial.otherCosts', 'Outros custos fixos mensais', 'money', { tip: 'Ferramentas, atendimento ou outras despesas ligadas à operação comercial.' }) +
-        F('financial.includeAgencyFee', 'Incluir honorários por padrão', 'select', { options: [['true', 'Sim'], ['false', 'Não']] }) +
-        F('financial.nearBandPct', 'Faixa "próximo do equilíbrio"', 'pct', { tip: 'Resultado dentro dessa porcentagem dos custos fixos, para mais ou para menos, é classificado como próximo do equilíbrio.' }) + '</div>' +
-        '<p class="hint" style="margin-top:14px">Sem custos variáveis informados, o ROI aparece como "ROI simplificado", pois trata todo o faturamento como margem.</p>';
+        '<p class="hint" style="margin-top:12px">As duas verbas somam sempre 100%. No atendimento atual, a distribuição é ajustada no card Distribuição do Investimento.</p>';
     }
-    if (tab === 'comerciais') {
-      return '<p class="hint" style="margin-bottom:14px">Premissas ilustrativas, não médias comprovadas de mercado. Ajuste de acordo com a realidade de cada estúdio. Taxas de agendamento, comparecimento e fechamento ficam dentro de cada cenário.</p>' +
+    if (tab === 'aquisicao') {
+      return '<div class="sec-t">Campanhas e custos de aquisição (Com Método TDE)</div><div class="fgrid">' +
+        F('acquisition.cpl', 'CPL das campanhas de contatos', 'money', { positive: true }) +
+        F('acquisition.followerCostMode', 'Custo por seguidor', 'select', { options: [['historical', 'Histórico (' + money(hr.followerCost) + ', razão exata)'], ['manual', 'Valor manual']] }) +
+        F('acquisition.followerCostManual', 'Custo por seguidor manual', 'money', { hint: 'Usado só quando "Valor manual" está selecionado.' }) +
+        F('acquisition.indirectFollowersEnabled', 'Seguidores adicionais das campanhas de contatos', 'select', { options: ONOFF }) +
+        F('acquisition.extraConversationsEnabled', 'Conversas adicionais da captação', 'select', { options: ONOFF }) + '</div>' +
+        '<div class="sec-t">Parâmetros históricos (9 semanas de um cliente real)</div><div class="fgrid">' +
+        F('acquisition.history.followerInvestment', 'Investimento em captação', 'money') +
+        F('acquisition.history.directFollowers', 'Seguidores gerados na captação', 'num') +
+        F('acquisition.history.extraConversations', 'Conversas adicionais da captação', 'num') +
+        F('acquisition.history.contactInvestment', 'Investimento em campanhas de contatos', 'money') +
+        F('acquisition.history.indirectFollowers', 'Seguidores adicionais dessas campanhas', 'num') + '</div>' +
+        '<p class="hint" style="margin-top:12px">Razões em uso: ' + money(hr.followerCost) + ' por seguidor · ' + nf(4, 4).format(hr.indirectPerReal) + ' seguidor por real em contatos · ' + nf(4, 4).format(hr.conversationsPerReal) + ' conversa por real em captação.</p>';
+    }
+    if (tab === 'comercial') {
+      return '<p class="hint" style="margin-bottom:14px">Os cenários compartilham investimento, CPL, seguidores e qualificação. Muda apenas o fechamento. As taxas são hipóteses comerciais, não estatísticas garantidas.</p>' +
+        '<div class="fgrid">' + F('commercial.qualificationRate', 'Taxa geral de qualificação', 'pct', { tip: 'Leads com intenção real de tatuar, estilo compatível e potencial de compra.' }) + '</div>' +
+        '<div class="sec-t">Fechamento sobre qualificados</div>' +
         d.scenarios.map(function (s, i) {
           var p = 'scenarios.' + i;
           return '<div class="sc-card"><div class="row-between"><h3>' + esc(s.name) + '</h3>' +
-            (s.builtin ? '<button class="btn small ghost" type="button" data-reset-scen="' + i + '">Restaurar valores originais</button>' : '<button class="btn small danger" type="button" data-del-scen="' + i + '">' + icon('trash', 14) + 'Excluir</button>') +
-            '</div><div class="fgrid">' + F(p + '.name', 'Nome', 'text') + scenarioFields(p) + F(p + '.description', 'Descrição', 'textarea', { wide: true }) + '</div></div>';
+            (s.builtin ? '<button class="btn small ghost" type="button" data-reset-scen="' + i + '">Restaurar valor oficial</button>' : '<button class="btn small danger" type="button" data-del-scen="' + i + '">' + icon('trash', 14) + 'Excluir</button>') +
+            '</div><div class="fgrid">' + F(p + '.name', 'Nome', 'text') + F(p + '.closeRate', 'Fechamento sobre qualificados', 'pct') +
+            '<div class="field"><span class="lbl">Conversão geral</span><div class="hint" style="font-size:15px;color:var(--fg);padding-top:8px">' + rateTxt(d.commercial.qualificationRate * s.closeRate) + '</div></div>' +
+            F(p + '.description', 'Perfil', 'textarea', { wide: true }) + '</div></div>';
         }).join('') +
         '<button class="btn" type="button" id="btn-add-scen" style="margin-top:14px">' + icon('plus', 16) + 'Adicionar cenário personalizado</button>';
     }
-    if (tab === 'castelo') {
-      var opts = [['selected', 'Cenário selecionado no atendimento']].concat(d.scenarios.map(function (s) { return [s.id, s.name]; }));
-      var imp = [['castelo', d.castelo.name + (/TDE|Elite/i.test(d.castelo.name) ? '' : ' (TDE)')]].concat(d.scenarios.map(function (s) { return [s.id, s.name]; }));
-      return '<p class="hint" style="margin-bottom:14px">Premissas do cenário "Com TDE" (Método Tatuador de Elite). O comparativo usa exatamente estes valores nas mesmas fórmulas do funil, sem multiplicadores fixos.</p>' +
-        '<div class="fgrid">' + F('castelo.name', 'Nome do cenário', 'text') + scenarioFields('castelo') + F('castelo.description', 'Descrição', 'textarea', { wide: true }) + '</div>' +
-        '<div class="sec-t">Comparativo padrão</div><div class="fgrid">' +
-        F('castelo.defaultBaseId', 'Cenário base padrão', 'select', { options: opts }) +
-        F('castelo.defaultImprovedId', 'Cenário de desempenho padrão', 'select', { options: imp }) + '</div>' +
-        '<p class="hint" style="margin-top:10px">Os padrões do comparativo valem para novas simulações. No atendimento atual, use os seletores do card Comparativo.</p>';
+    if (tab === 'semtde') {
+      return '<p class="hint" style="margin-bottom:14px">Operação independente usada no card "Sem Método TDE". Investimento e ticket são sempre os mesmos do prospect. Valores hipotéticos, não resultados históricos comprovados.</p><div class="fgrid">' +
+        F('independent.cpl', 'CPL independente', 'money', { positive: true }) + F('independent.qualificationRate', 'Qualificação independente', 'pct') +
+        F('independent.closeRate', 'Fechamento independente', 'pct') + F('independent.followerCost', 'Custo por seguidor', 'money') +
+        F('independent.followMainDistribution', 'Distribuição da verba', 'select', { options: [['true', 'Acompanhar a distribuição principal'], ['false', 'Usar distribuição própria']] }) +
+        F('independent.followersShare', 'Verba para seguidores (própria)', 'pct') + F('independent.contactsShare', 'Verba para contatos (própria)', 'pct') +
+        F('independent.extraConversationsEnabled', 'Conversas adicionais da captação', 'select', { options: ONOFF }) +
+        F('independent.indirectFollowersEnabled', 'Seguidores adicionais', 'select', { options: ONOFF }) +
+        F('independent.description', 'Descrição', 'textarea', { wide: true }) + '</div>';
+    }
+    if (tab === 'projecao') {
+      return '<p class="hint" style="margin-bottom:14px">Valores usados em cada nova simulação. Os controles do card Projeção temporal ajustam apenas o atendimento atual.</p><div class="fgrid">' +
+        F('projection.months', 'Horizonte de projeção', 'select', { options: [['6', '6 meses'], ['12', '12 meses']] }) +
+        F('projection.growthEnabled', 'Crescimento do investimento', 'select', { options: ONOFF }) +
+        F('projection.growthPct', 'Crescimento mensal', 'pct') +
+        F('projection.rampEnabled', 'Rampagem', 'select', { options: ONOFF }) +
+        F('projection.rampMonths', 'Período de maturação (meses)', 'int', { min: 1, max: 12 }) +
+        F('projection.startEfficiency', 'Eficiência inicial do fechamento', 'pct', { max: 200 }) +
+        F('projection.finalEfficiency', 'Eficiência final do fechamento', 'pct', { max: 200, tip: 'Também usada no funil do mês de referência. 100% = taxa do cenário sem ajuste.' }) + '</div>';
     }
     if (tab === 'alavancas') {
-      return '<p class="hint" style="margin-bottom:14px">Cada alavanca soma vendas próprias depois da maturação. Elas nunca entram no ROAS dos anúncios. Ticket zerado usa o ticket médio do prospect.</p>' +
+      return '<p class="hint" style="margin-bottom:14px">Cada alavanca soma vendas próprias depois da maturação (3 meses = primeira venda no mês 4) e nunca entra no ROAS dos anúncios. Ticket zerado usa o ticket do prospect.</p>' +
         d.levers.map(function (l, i) {
           var p = 'levers.' + i;
           return '<div class="sc-card"><div class="row-between"><h3>Alavanca 0' + (i + 2) + ' · ' + esc(l.name) + '</h3></div><div class="fgrid">' +
-            F(p + '.name', 'Nome', 'text') + F(p + '.salesPerMonth', 'Vendas adicionais por mês', 'num') +
+            F(p + '.name', 'Nome', 'text') + F(p + '.salesPerMonth', 'Vendas extras por mês', 'num') +
             F(p + '.maturationMonths', 'Maturação (meses)', 'int', { max: 24 }) + F(p + '.ticket', 'Ticket próprio (opcional)', 'money') +
-            F(p + '.monthlyCost', 'Custo operacional mensal (opcional)', 'money') +
-            F(p + '.description', 'Descrição da estratégia', 'textarea', { wide: true }) + '</div></div>';
+            F(p + '.monthlyCost', 'Custo adicional mensal', 'money') + F(p + '.description', 'Descrição', 'textarea', { wide: true }) + '</div></div>';
         }).join('');
     }
-    // projeção
-    return '<p class="hint" style="margin-bottom:14px">Valores usados em cada nova simulação. Os controles do card Projeção temporal ajustam apenas o atendimento atual.</p><div class="fgrid">' +
-      F('projection.months', 'Período padrão', 'select', { options: [['6', '6 meses'], ['12', '12 meses']] }) +
-      F('projection.growthEnabled', 'Crescimento do investimento', 'select', { options: [['false', 'Desativado'], ['true', 'Ativado']] }) +
-      F('projection.growthPct', 'Crescimento mensal do investimento', 'pct') +
-      F('projection.rampEnabled', 'Tempo de rampagem', 'select', { options: [['false', 'Desativado'], ['true', 'Ativado']] }) +
-      F('projection.rampMonths', 'Período de maturação (meses)', 'int', { min: 1, max: 12 }) +
-      F('projection.startEfficiency', 'Eficiência inicial', 'pct', { max: 200 }) +
-      F('projection.finalEfficiency', 'Eficiência final', 'pct', { max: 200, tip: 'Também usada no funil do mês de referência. 100% = taxas do cenário sem ajuste.' }) + '</div>' +
-      '<div class="sec-t">Exibição de quantidades</div><div class="fgrid">' +
-      F('display.policy', 'Regra de exibição', 'select', { options: [['integer', 'Inteiros (arredonda para baixo em cada etapa)'], ['expected', 'Valores esperados (médias com 1 casa decimal)']], wide: true }) + '</div>' +
-      '<p class="hint" style="margin-top:10px">Em ambos os modos o faturamento é sempre vendas × ticket, e os totais somam os valores mensais.</p>';
+    return '<div class="sec-t">Custos considerados no ROI e no ponto de equilíbrio</div><div class="fgrid">' +
+      F('financial.variableCostPct', 'Custos variáveis (% do faturamento)', 'pct', { tip: 'Material, taxas de cartão, comissões e impostos sobre cada venda.' }) +
+      F('financial.contributionMargin', 'Margem de contribuição', 'pct', { tip: 'Parte do ticket que sobra após os custos variáveis. Soma 100% com os custos variáveis.' }) +
+      F('financial.agencyFee', 'Honorários mensais', 'money') + F('financial.otherCosts', 'Custos adicionais mensais', 'money') +
+      F('financial.includeAgencyFee', 'Incluir honorários por padrão', 'select', { options: [['true', 'Sim'], ['false', 'Não']] }) +
+      F('financial.nearBandPct', 'Faixa "próximo do equilíbrio"', 'pct') + '</div>' +
+      '<p class="hint" style="margin-top:14px">Com custos variáveis em 0% (margem de 100%), o ROI não é exibido e o ponto de equilíbrio aparece como simplificado.</p>';
   }
 
   function openSettings(tab) {
     draft = clone(config);
-    currentTab = tab || 'financeiro';
-    var root = $('modal-root');
-    root.innerHTML = '<div class="overlay" id="ov"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-title">' +
+    currentTab = tab || 'investimento';
+    $('modal-root').innerHTML = '<div class="overlay" id="ov"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-title">' +
       '<div class="modal-h"><div><h2 id="m-title">Configurações</h2><p>Salvas neste navegador. Não sincronizam entre dispositivos; use Exportar e Importar para levar a outro computador.</p></div>' +
       '<button class="close-x" type="button" id="m-close" aria-label="Fechar">' + icon('x') + '</button></div>' +
       '<div class="tabs" role="tablist">' + TABS.map(function (t) { return '<button type="button" role="tab" data-tab="' + t[0] + '" id="tab-' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
       '<div class="modal-b" id="m-body"></div>' +
-      '<div class="modal-f"><div class="grp"><button class="btn small ghost" type="button" id="m-reset">Restaurar padrões</button>' +
+      '<div class="modal-f"><div class="grp"><button class="btn small ghost" type="button" id="m-reset">Restaurar padrões oficiais TDE</button>' +
       '<button class="btn small ghost" type="button" id="m-export">' + icon('download', 14) + 'Exportar JSON</button>' +
       '<button class="btn small ghost" type="button" id="m-import">' + icon('upload', 14) + 'Importar JSON</button><input type="file" id="m-file" accept="application/json,.json" hidden></div>' +
       '<div class="grp"><button class="btn" type="button" id="m-cancel">Cancelar</button><button class="btn primary" type="button" id="m-save">Salvar configurações</button></div></div></div></div>';
@@ -1531,13 +1670,11 @@ td.dim { color: var(--dim); }
     $('m-reset').addEventListener('click', function (e) {
       var b = e.currentTarget;
       if (!b._armed) { b._armed = true; b.textContent = 'Confirmar restauração'; b.classList.add('danger'); return; }
-      b._armed = false; b.textContent = 'Restaurar padrões'; b.classList.remove('danger');
+      b._armed = false; b.textContent = 'Restaurar padrões oficiais TDE'; b.classList.remove('danger');
       draft = E.defaultConfig(); renderTab(); recompute();
-      toast('Padrões originais carregados. Clique em Salvar para manter.');
+      toast('Padrões oficiais carregados. Os dados do prospect foram mantidos. Clique em Salvar para manter.');
     });
-    root.querySelector('.tabs').addEventListener('click', function (e) {
-      var b = e.target.closest('[data-tab]'); if (!b) return; currentTab = b.getAttribute('data-tab'); renderTab();
-    });
+    document.querySelector('.tabs').addEventListener('click', function (e) { var b = e.target.closest('[data-tab]'); if (!b) return; currentTab = b.getAttribute('data-tab'); renderTab(); });
     var body = $('m-body');
     body.addEventListener('input', onCfgInput);
     body.addEventListener('change', onCfgInput);
@@ -1549,16 +1686,13 @@ td.dim { color: var(--dim); }
     body.addEventListener('click', function (e) {
       var t;
       if ((t = e.target.closest('#btn-add-scen'))) {
-        draft.scenarios.push({ id: 'custom-' + Date.now().toString(36), name: 'Personalizado ' + (draft.scenarios.filter(function (s) { return !s.builtin; }).length + 1), builtin: false,
-          cpl: draft.defaults.cpl, scheduleRate: 0.15, showRate: 0.75, closeRate: 0.65, description: 'Cenário personalizado.' });
+        draft.scenarios.push({ id: 'custom-' + Date.now().toString(36), name: 'Personalizado ' + (draft.scenarios.filter(function (s) { return !s.builtin; }).length + 1), builtin: false, closeRate: 0.25, description: 'Cenário personalizado.' });
         renderTab(); recompute();
         var cards = body.querySelectorAll('.sc-card'); if (cards.length) cards[cards.length - 1].scrollIntoView({ block: 'nearest' });
       } else if ((t = e.target.closest('[data-del-scen]'))) {
         var i = Number(t.getAttribute('data-del-scen')), id = draft.scenarios[i].id;
         draft.scenarios.splice(i, 1);
         if (draft.defaults.scenarioId === id) draft.defaults.scenarioId = draft.scenarios[0].id;
-        if (draft.castelo.defaultBaseId === id) draft.castelo.defaultBaseId = 'selected';
-        if (draft.castelo.defaultImprovedId === id) draft.castelo.defaultImprovedId = 'castelo';
         renderTab(); recompute();
       } else if ((t = e.target.closest('[data-reset-scen]'))) {
         var j = Number(t.getAttribute('data-reset-scen'));
@@ -1580,6 +1714,7 @@ td.dim { color: var(--dim); }
     var kind = el.dataset.kind, err = $('err-' + el.id), v;
     if (kind === 'text' || kind === 'textarea') v = el.value.slice(0, kind === 'text' ? 40 : 400);
     else if (kind === 'select') {
+      if (e.type !== 'change') return;
       v = el.value;
       if (v === 'true' || v === 'false') v = v === 'true';
       else if (path === 'projection.months') v = Number(v);
@@ -1589,8 +1724,11 @@ td.dim { color: var(--dim); }
       if (r.error) return;
       v = r.value;
     }
+    if (e.type === 'change' && kind !== 'select') return;
     setPath(draft, path, v);
-    if (/^scenarios\.\d+\.name$/.test(path) || path === 'castelo.name' || /^levers\.\d+\.name$/.test(path)) {
+    var L = LINKED[path];
+    if (L) { var pe = $(fid(L.partner)); if (pe) { pe.value = fmtInput('pct', getPath(draft, L.partner)); pe.classList.remove('bad'); var pr = $('err-' + pe.id); if (pr) pr.textContent = ''; } }
+    if (/^scenarios\.\d+\.name$/.test(path) || /^levers\.\d+\.name$/.test(path)) {
       var h = el.closest('.sc-card'); if (h && h.querySelector('h3')) h.querySelector('h3').textContent = (path.indexOf('levers') === 0 ? 'Alavanca 0' + (Number(path.split('.')[1]) + 2) + ' · ' : '') + v;
     }
     recompute();
@@ -1607,15 +1745,15 @@ td.dim { color: var(--dim); }
     if (bad) { toast('Corrija os campos destacados antes de salvar.'); bad.focus(); return; }
     config = E.normalizeConfig(draft);
     draft = null;
-    var ok = store(K_CFG, config);
-    if (!E.findScenario(config, sim.scenarioId)) sim.scenarioId = config.scenarios[0].id;
+    var okSave = store(K_CFG, config);
+    if (!E.findScenario(config, sim.scenarioId)) sim.scenarioId = config.defaults.scenarioId;
     $('modal-root').innerHTML = '';
     recompute();
-    toast(ok ? 'Configurações salvas neste navegador.' : 'Configurações aplicadas, mas o navegador bloqueou o salvamento local.');
+    toast(okSave ? 'Configurações salvas neste navegador.' : 'Configurações aplicadas, mas o navegador bloqueou o salvamento local.');
   }
 
   function exportConfig() {
-    var data = JSON.stringify({ app: 'tde-calculadora-roi', version: 1, exportedAt: new Date().toISOString(), config: E.normalizeConfig(draft || config) }, null, 2);
+    var data = JSON.stringify({ app: 'tde-calculadora-roi', version: E.CONFIG_VERSION, exportedAt: new Date().toISOString(), config: E.normalizeConfig(draft || config) }, null, 2);
     saveFile('tde-calculadora-configuracoes.json', data, 'application/json');
   }
   function importConfig(e) {
@@ -1670,32 +1808,25 @@ td.dim { color: var(--dim); }
   // ------------------------------------------------------------ resumo WhatsApp
   function summaryText() {
     var m = model, f = m.funnel, fi = m.financial, c = m.compare, P = m.projection, T = P.totals;
-    var name = sim.name.trim();
-    var lines = [];
+    var name = sim.name.trim(), lines = [];
     lines.push('*Projeção Tatuador de Elite' + (name ? ' · ' + name : '') + '*');
-    lines.push('Investimento mensal em anúncios: ' + money(m.investment));
-    lines.push('Ticket médio: ' + money(m.ticket));
-    lines.push('Cenário: ' + m.scenario.name);
-    if (m.mode === 'reverse' && m.reverse && m.reverse.feasible) {
-      lines.push('Meta: ' + (m.reverse.type === 'revenue' ? money(m.reverse.target) + ' de faturamento' : qty(m.reverse.target) + ' vendas') + ' (diferença de ' + signedMoney(m.reverse.difference) + ' no investimento atual)');
-    }
+    lines.push('Investimento mensal em anúncios: ' + money(m.investment) + ' (' + pct(f.followersShare * 100, 0) + ' seguidores · ' + pct((1 - f.followersShare) * 100, 0) + ' contatos)');
+    lines.push('Ticket médio: ' + money(m.ticket) + ' · Cenário: ' + m.scenario.name);
+    if (m.mode === 'reverse' && m.reverse && m.reverse.feasible) lines.push('Meta: ' + (m.reverse.type === 'revenue' ? money(m.reverse.target) : qty(m.reverse.target) + ' vendas') + ' · investimento mínimo ' + money(m.reverse.investment));
     lines.push('');
-    lines.push('*Funil mensal*');
-    lines.push('Leads: ' + qty(f.leads) + ' · Agendamentos: ' + qty(f.appointments) + ' · Comparecimentos: ' + qty(f.shows) + ' · Vendas: ' + qty(f.sales));
-    lines.push('Faturamento: ' + money(fi.adRevenue) + ' · ROAS: ' + xr(fi.roas));
-    lines.push((fi.roiSimplified ? 'ROI simplificado: ' : 'ROI estimado: ') + (fi.roi === null ? '—' : pct(fi.roi, 0)) + ' · ' + STATUS[fi.status]);
+    lines.push('*Audiência:* ' + qty(f.followers) + ' novos seguidores por mês');
+    lines.push('*Funil mensal:* ' + qty(f.leads) + ' leads → ' + qty(f.qualified) + ' qualificados → ' + qty(f.sales) + ' vendas');
+    lines.push('Faturamento: ' + money(fi.adRevenue) + ' · ROAS hipotético: ' + xr(fi.roas));
     lines.push('');
-    lines.push('*Com TDE (' + c.improvedScenario.name + ')*');
-    lines.push(qty(c.improved.funnel.sales) + ' vendas/mês · ' + money(c.improved.fin.adRevenue) + ' · ROAS ' + xr(c.improved.fin.roas));
-    lines.push('Diferença: ' + (c.extraSales > 0 ? '+' : '') + qty(c.extraSales) + ' vendas e ' + signedMoney(c.incrementalRevenue) + ' por mês');
+    lines.push('*Sem Método TDE:* ' + qty(c.base.funnel.sales) + ' vendas · ' + money(c.base.fin.adRevenue));
+    lines.push('*Com Método TDE (' + m.scenario.name + '):* ' + qty(c.improved.funnel.sales) + ' vendas · ' + money(c.improved.fin.adRevenue));
+    lines.push('Diferença: ' + signedQty(c.extraSales) + ' vendas e ' + signedMoney(c.incrementalRevenue) + ' por mês');
     lines.push('');
-    lines.push('*Projeção de ' + P.months + ' meses*');
-    lines.push('Investimento: ' + money(T.investment) + ' · Faturamento total: ' + money(T.totalRevenue));
-    lines.push('Vendas: ' + qty(T.adSales) + ' dos anúncios' + (T.leverSales ? ' + ' + qty(T.leverSales) + ' das alavancas' : ''));
+    lines.push('*Projeção de ' + P.months + ' meses:* investimento ' + money(T.investment) + ' · faturamento total ' + money(T.totalRevenue));
     var act = T.levers.filter(function (l) { return l.enabled; });
-    if (act.length) lines.push('Alavancas ativas: ' + act.map(function (l) { return l.name; }).join(', '));
+    if (act.length) lines.push('Alavancas ativas: ' + act.map(function (l) { return l.name; }).join(', ') + ' (+' + qty(T.leverSales) + ' vendas no período)');
     lines.push('');
-    lines.push('_Projeção ilustrativa baseada em premissas configuráveis. Não é garantia de resultado._');
+    lines.push('_Projeção hipotética baseada em premissas configuráveis. Não é garantia de resultado._');
     return lines.join('\n');
   }
   function copySummary() {
@@ -1708,13 +1839,11 @@ td.dim { color: var(--dim); }
       $('ov').addEventListener('click', function (e) { if (e.target.id === 'ov') closeModal(); });
       var t = $('c-text'); t.focus(); t.select();
     }
-    try {
-      navigator.clipboard.writeText(text).then(function () { toast('Resumo copiado. Cole no WhatsApp.'); }, fallback);
-    } catch (e) { fallback(); }
+    try { navigator.clipboard.writeText(text).then(function () { toast('Resumo copiado. Cole no WhatsApp.'); }, fallback); } catch (e) { fallback(); }
   }
 
   // ------------------------------------------------------------ PDF
-  function pdfSafe(s) { return String(s).replace(/[−–—]/g, '-').replace(/[  ]/g, ' ').replace(/[^\x00-\xff]/g, ''); }
+  function pdfSafe(s) { return String(s).replace(/[−–—]/g, '-').replace(/→/g, '>').replace(/[  ]/g, ' ').replace(/[^\x00-\xff]/g, ''); }
 
   function generatePdf() {
     if (!window.jspdf || !window.jspdf.jsPDF) { toast('A biblioteca de PDF não carregou. Verifique a conexão e recarregue a página.'); return; }
@@ -1722,24 +1851,20 @@ td.dim { color: var(--dim); }
     try {
       var doc = buildPdf(model, sim);
       var slug = (sim.name || 'prospect').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'prospect';
-      var blob = doc.output('blob');
-      saveFile('proposta-tatuador-de-elite-' + slug + '.pdf', blob, 'application/pdf').then(function () { btn.disabled = false; });
-    } catch (e) {
-      btn.disabled = false; toast('Não foi possível gerar o PDF.'); if (window.console) console.error(e);
-    }
+      saveFile('proposta-tatuador-de-elite-' + slug + '.pdf', doc.output('blob'), 'application/pdf').then(function () { btn.disabled = false; });
+    } catch (e) { btn.disabled = false; toast('Não foi possível gerar o PDF.'); if (window.console) console.error(e); }
   }
 
   function buildPdf(m, s) {
-    var J = window.jspdf.jsPDF;
-    var doc = new J({ unit: 'mm', format: 'a4' });
+    var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
     var INK = [8, 8, 8], GOLD = [229, 179, 53], GDARK = [168, 125, 28], LEVER = [184, 138, 34], GRAY = [110, 110, 110], LINE = [226, 226, 226], TINT = [250, 246, 235], RED = [196, 72, 72];
-    var DARK = [8, 8, 8], CARD = [20, 20, 20], BORDER = [41, 41, 41], SOFT = [163, 163, 163];
+    var DARK = [8, 8, 8], CARD = [20, 20, 20], BORDER = [41, 41, 41], SOFT = [163, 163, 163], MID = [92, 92, 92];
     var LOGO = $('brand-logo').src, LOGO_R = 1848 / 687;
     var name = (s.name || '').trim();
     var dateTxt = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date());
-    var f = m.funnel, fi = m.financial, c = m.compare, P = m.projection, T = P.totals;
+    var f = m.funnel, fi = m.financial, c = m.compare, P = m.projection, T = P.totals, y;
 
-    function T_(x, y, str, o) { doc.text(pdfSafe(str), x, y, o || {}); }
+    function T_(x, yy, str, o) { doc.text(pdfSafe(str), x, yy, o || {}); }
     function font(style, size, color) { doc.setFont('helvetica', style); doc.setFontSize(size); doc.setTextColor.apply(doc, color || INK); }
     function header(title, sub) {
       doc.setFillColor.apply(doc, DARK); doc.rect(0, 0, 210, 32, 'F');
@@ -1749,45 +1874,47 @@ td.dim { color: var(--dim); }
       font('bold', 15, [255, 255, 255]); T_(63, 16.5, title);
       if (sub) { font('normal', 8.5, SOFT); T_(63, 22.5, sub); }
     }
-    function section(y, title) { font('bold', 11, INK); T_(15, y, title); doc.setDrawColor.apply(doc, GOLD); doc.setLineWidth(0.6); doc.line(15, y + 2, 30, y + 2); return y + 8; }
-    function box(x, y, w, h, label, value, sub, color) {
-      doc.setFillColor.apply(doc, TINT); doc.setDrawColor.apply(doc, LINE); doc.setLineWidth(0.2); doc.roundedRect(x, y, w, h, 2, 2, 'FD');
-      font('normal', 7.5, GRAY); T_(x + 4, y + 6, label);
-      font('bold', 13, color || INK); T_(x + 4, y + 14, value);
-      if (sub) { font('normal', 7, GRAY); T_(x + 4, y + h - 3.5, doc.splitTextToSize(pdfSafe(sub), w - 8)[0]); }
+    function section(yy, title) { font('bold', 11, INK); T_(15, yy, title); doc.setDrawColor.apply(doc, GOLD); doc.setLineWidth(0.6); doc.line(15, yy + 2, 30, yy + 2); return yy + 8; }
+    function box(x, yy, w, h, label, value, sub, color) {
+      doc.setFillColor.apply(doc, TINT); doc.setDrawColor.apply(doc, LINE); doc.setLineWidth(0.2); doc.roundedRect(x, yy, w, h, 2, 2, 'FD');
+      font('normal', 7.2, GRAY); T_(x + 4, yy + 6, doc.splitTextToSize(pdfSafe(label), w - 8)[0]);
+      font('bold', 12.5, color || INK); T_(x + 4, yy + 13.5, value);
+      if (sub) { font('normal', 6.8, GRAY); T_(x + 4, yy + h - 3.5, doc.splitTextToSize(pdfSafe(sub), w - 8)[0]); }
     }
-    function table(x, y, cols, rows, opt) {
-      opt = opt || {}; var rh = opt.rh || 7, totalW = cols.reduce(function (a, cc) { return a + cc.w; }, 0);
-      doc.setFillColor.apply(doc, DARK); doc.rect(x, y, totalW, rh, 'F');
+    function boxes(yy, list, cols, w, h, gap) {
+      list.forEach(function (b, i) { box(15 + (i % cols) * (w + gap), yy + Math.floor(i / cols) * (h + gap), w, h, b[0], b[1], b[2], b[3]); });
+      return yy + Math.ceil(list.length / cols) * (h + gap);
+    }
+    function table(x, yy, cols, rows, opt) {
+      opt = opt || {}; var rh = opt.rh || 7, totalW = cols.reduce(function (a, cc) { return a + cc.w; }, 0), cx;
+      doc.setFillColor.apply(doc, DARK); doc.rect(x, yy, totalW, rh, 'F');
       font('bold', 7.5, [255, 255, 255]);
-      var cx = x; cols.forEach(function (cc) { T_(cc.align === 'left' ? cx + 2.5 : cx + cc.w - 2.5, y + rh - 2.3, cc.h, { align: cc.align === 'left' ? 'left' : 'right' }); cx += cc.w; });
-      y += rh;
+      cx = x; cols.forEach(function (cc) { T_(cc.align === 'left' ? cx + 2.5 : cx + cc.w - 2.5, yy + rh - 2.3, cc.h, { align: cc.align === 'left' ? 'left' : 'right' }); cx += cc.w; });
+      yy += rh;
       rows.forEach(function (r, ri) {
         var last = opt.boldLast && ri === rows.length - 1;
-        if (last) { doc.setFillColor.apply(doc, TINT); doc.rect(x, y, totalW, rh, 'F'); }
-        else if (ri % 2) { doc.setFillColor(247, 250, 248); doc.rect(x, y, totalW, rh, 'F'); }
+        if (last) { doc.setFillColor.apply(doc, TINT); doc.rect(x, yy, totalW, rh, 'F'); }
+        else if (ri % 2) { doc.setFillColor(248, 248, 246); doc.rect(x, yy, totalW, rh, 'F'); }
         font(last ? 'bold' : 'normal', 8, INK);
-        cx = x; cols.forEach(function (cc, ci) {
-          var val = r[ci] === undefined ? '' : String(r[ci]);
-          T_(cc.align === 'left' ? cx + 2.5 : cx + cc.w - 2.5, y + rh - 2.3, val, { align: cc.align === 'left' ? 'left' : 'right' }); cx += cc.w;
-        });
-        doc.setDrawColor.apply(doc, LINE); doc.setLineWidth(0.15); doc.line(x, y + rh, x + totalW, y + rh);
-        y += rh;
+        cx = x; cols.forEach(function (cc, ci) { T_(cc.align === 'left' ? cx + 2.5 : cx + cc.w - 2.5, yy + rh - 2.3, r[ci] === undefined ? '' : String(r[ci]), { align: cc.align === 'left' ? 'left' : 'right' }); cx += cc.w; });
+        doc.setDrawColor.apply(doc, LINE); doc.setLineWidth(0.15); doc.line(x, yy + rh, x + totalW, yy + rh);
+        yy += rh;
       });
-      return y;
+      return yy;
     }
+    function note(yy, text) { font('normal', 7.3, GRAY); doc.text(doc.splitTextToSize(pdfSafe(text), 180), 15, yy); }
 
-    // ---- Página 1: apresentação
+    // ---- 1. Apresentação
     doc.setFillColor.apply(doc, DARK); doc.rect(0, 0, 210, 297, 'F');
     doc.addImage(LOGO, 'PNG', 15, 22, 30 * LOGO_R, 30);
     doc.setFillColor.apply(doc, GOLD); doc.rect(15, 84, 18, 0.8, 'F');
     font('normal', 10, GOLD); T_(15, 92, 'PROPOSTA COMERCIAL');
     font('bold', 30, [255, 255, 255]);
     doc.text(doc.splitTextToSize('Projeção de Investimento e Resultados', 170), 15, 106, { lineHeightFactor: 1.15 });
-    var y = 140;
+    y = 140;
     if (name) { font('normal', 10, SOFT); T_(15, y, 'Preparada para'); font('bold', 20, GOLD); T_(15, y + 10, name.slice(0, 60)); y += 26; }
-    var cover = [['Investimento mensal em anúncios', money(m.investment)], ['Ticket médio', money(m.ticket)], ['Cenário comercial atual', m.scenario.name], ['Período da projeção', P.months + ' meses']];
-    if (m.mode === 'reverse' && m.reverse && m.reverse.feasible) cover[0][0] = 'Investimento necessário para a meta';
+    var cover = [[m.mode === 'reverse' && m.reverse && m.reverse.feasible ? 'Investimento mínimo para a meta' : 'Investimento mensal em anúncios', money(m.investment)], ['Ticket médio', money(m.ticket)],
+      ['Cenário selecionado', m.scenario.name], ['Período da projeção', P.months + ' meses']];
     cover.forEach(function (it, i) {
       var bx = 15 + (i % 2) * 92, by = y + Math.floor(i / 2) * 26;
       doc.setDrawColor.apply(doc, BORDER); doc.setFillColor.apply(doc, CARD); doc.setLineWidth(0.3); doc.roundedRect(bx, by, 88, 22, 2.5, 2.5, 'FD');
@@ -1796,88 +1923,117 @@ td.dim { color: var(--dim); }
     });
     font('normal', 9, SOFT); T_(15, 262, 'Tatuador de Elite · ' + dateTxt);
 
-    // ---- Página 2: funil e resultados
-    doc.addPage(); header('Funil e resultados', 'Cenário ' + m.scenario.name);
-    y = section(46, m.mode === 'reverse' ? 'Funil com o investimento necessário para a meta' : 'Funil de conversão mensal');
+    // ---- 2. Audiência e aquisição
+    doc.addPage(); header('Audiência e aquisição', 'Distribuição da verba, seguidores e leads');
+    y = section(46, 'Distribuição do investimento: ' + money(f.investment) + ' por mês');
+    var fw = 180 * f.followersShare;
+    doc.setFillColor.apply(doc, MID); if (fw > 0) doc.rect(15, y, fw, 9, 'F');
+    doc.setFillColor.apply(doc, GOLD); if (fw < 180) doc.rect(15 + fw, y, 180 - fw, 9, 'F');
+    y += 15;
+    y = table(15, y, [{ h: 'Destino da verba', w: 90, align: 'left' }, { h: 'Percentual', w: 40 }, { h: 'Investimento', w: 50 }], [
+      ['Captação de seguidores', pct(f.followersShare * 100, 0), money(f.followersBudget)],
+      ['Geração de contatos', pct((1 - f.followersShare) * 100, 0), money(f.contactsBudget)]
+    ]);
+    y = section(y + 10, 'Crescimento de audiência');
+    y = boxes(y, [
+      ['Custo por seguidor', f.followerCost > 0 ? money(f.followerCost) : '-', m.config.acquisition.followerCostMode === 'manual' ? 'Valor manual' : 'Referência histórica'],
+      ['Seguidores da captação', qty(f.followersDirect), 'Verba de seguidores'],
+      ['Seguidores adicionais', qty(f.followersIndirect), 'Campanhas de contatos'],
+      ['Total de seguidores', qty(f.followers), 'Por mês', GDARK]
+    ], 4, 43.5, 22, 2.33);
+    note(y + 2, 'Seguidores representam crescimento de audiência e potencial de relacionamento futuro. Eles não são convertidos em vendas na projeção.');
+    y = section(y + 14, 'Geração de leads');
+    y = boxes(y, [
+      ['CPL dos contatos', money(f.cpl), 'Custo por lead'],
+      ['Leads das campanhas', qty(f.contactLeads), money(f.contactsBudget) + ' / CPL'],
+      ['Conversas da captação', qty(f.extraConversations), m.config.acquisition.extraConversationsEnabled ? 'Incluídas no funil' : 'Desativadas'],
+      ['Leads totais', qty(f.leads), 'Por mês', GDARK]
+    ], 4, 43.5, 22, 2.33);
+    if (m.config.acquisition.extraConversationsEnabled) note(y + 2, 'Premissa: as conversas geradas pela captação são contatos distintos dos leads das campanhas de contatos (sem deduplicação comprovada).');
+    var hh = m.config.acquisition.history;
+    note(y + 12, 'Base histórica: 9 semanas de campanhas de um cliente real (R$ ' + nf(2, 2).format(hh.followerInvestment) + ' em captação gerando ' + qty(hh.directFollowers) + ' seguidores e ' + qty(hh.extraConversations) + ' conversas; R$ ' + nf(2, 2).format(hh.contactInvestment) + ' em contatos gerando ' + qty(hh.indirectFollowers) + ' seguidores adicionais).');
+
+    // ---- 3. Funil comercial
+    doc.addPage(); header('Funil comercial', 'Cenário ' + m.scenario.name);
+    y = section(46, m.mode === 'reverse' ? 'Funil com o investimento mínimo para a meta' : 'Funil de conversão mensal');
     var stages = [
-      ['Investimento mensal', money(f.investment), 'CPL de ' + money(f.cpl)],
-      ['Leads gerados', qty(f.leads), 'Investimento / CPL'],
-      ['Agendamentos', qty(f.appointments), 'Taxa de agendamento ' + rateTxt(f.scheduleRate)],
-      ['Comparecimentos', qty(f.shows), 'Taxa de comparecimento ' + rateTxt(f.showRate)],
-      ['Vendas', qty(f.sales), 'Taxa de fechamento ' + rateTxt(f.closeRate)]
+      ['Leads recebidos: ' + qty(f.leads), qty(f.contactLeads) + ' das campanhas + ' + qty(f.extraConversations) + ' conversas da captação'],
+      ['Leads qualificados: ' + qty(f.qualified), 'Qualificação de ' + rateTxt(f.qualificationRate)],
+      ['Vendas realizadas: ' + qty(f.sales), 'Fechamento de ' + rateTxt(f.closeRate) + ' · conversão geral ' + rateTxt(f.conversionRate)],
+      ['Faturamento projetado: ' + money(fi.adRevenue), qty(f.sales) + ' vendas x ' + money(m.ticket)]
     ];
-    var shades = [[8, 8, 8], [38, 31, 15], [92, 70, 22], [168, 125, 28], [229, 179, 53]];
+    var shades = [[8, 8, 8], [60, 46, 16], [150, 112, 26], [229, 179, 53]];
     stages.forEach(function (st, i) {
-      var w = 180 - i * 22, x = 105 - w / 2;
-      doc.setFillColor.apply(doc, shades[i]); doc.roundedRect(x, y, w, 12, 2, 2, 'F');
-      font('bold', 10.5, i === 4 ? INK : [255, 255, 255]); T_(105, y + 6.2, st[0] + ': ' + st[1], { align: 'center' });
-      font('normal', 7, i === 4 ? [60, 45, 10] : [205, 200, 190]); T_(105, y + 10, st[2], { align: 'center' });
-      y += 14.5;
+      var w = 180 - i * 26, x = 105 - w / 2;
+      doc.setFillColor.apply(doc, shades[i]); doc.roundedRect(x, y, w, 13, 2, 2, 'F');
+      font('bold', 10.5, i === 3 ? INK : [255, 255, 255]); T_(105, y + 6.5, st[0], { align: 'center' });
+      font('normal', 7, i === 3 ? [60, 45, 10] : [210, 205, 195]); T_(105, y + 10.6, st[1], { align: 'center' });
+      y += 15.5;
     });
-    font('normal', 7.5, GRAY);
-    T_(15, y + 2, m.policy === 'expected' ? 'Quantidades em valores esperados (médias). Faturamento = vendas esperadas x ticket médio.' : 'Quantidades inteiras, arredondadas para baixo em cada etapa. Faturamento = vendas x ticket médio.');
-    y = section(y + 14, 'Indicadores financeiros do tráfego pago (mensal)');
-    var bw = 58, bh = 24;
-    var boxes = [
-      ['Faturamento bruto projetado', money(fi.adRevenue), qty(fi.adSales) + ' vendas x ' + money(fi.ticket), GDARK],
-      ['ROAS', xr(fi.roas), 'Faturamento / investimento em anúncios', GDARK],
-      [fi.roiSimplified ? 'ROI simplificado' : 'ROI estimado', fi.roi === null ? '-' : (fi.roi > 0 ? '+' : '') + pct(fi.roi, 0), fi.roiSimplified ? 'Sem custos variáveis informados' : 'Sobre custos fixos considerados', fi.roi !== null && fi.roi < 0 ? RED : GDARK],
-      ['Resultado financeiro estimado', money(fi.result), 'Faturamento - custos considerados', fi.result < 0 ? RED : GDARK],
-      ['Custo por venda', fi.costPerSale === null ? 'Sem vendas' : money(fi.costPerSale), 'Investimento / vendas dos anúncios'],
-      ['Ponto de equilíbrio', fi.breakEvenSales === null ? '-' : qty(fi.breakEvenSales) + ' vendas', STATUS[fi.status]]
-    ];
-    boxes.forEach(function (b, i) { box(15 + (i % 3) * (bw + 3), y + Math.floor(i / 3) * (bh + 3), bw, bh, b[0], b[1], b[2], b[3]); });
-    y += 2 * (bh + 3) + 6;
-    y = section(y, 'Custos considerados no mês');
+    note(y + 1, 'Cálculo com valores esperados; quantidades inteiras arredondadas apenas no final. Faturamento = vendas inteiras x ticket médio.');
+    y = section(y + 12, 'Indicadores financeiros (mensal, somente anúncios)');
+    y = boxes(y, [
+      ['Faturamento bruto', money(fi.adRevenue), qty(fi.adSales) + ' vendas', GDARK],
+      ['ROAS hipotético', xr(fi.roas), 'Faturamento / investimento', GDARK],
+      ['Custo por venda', fi.costPerSale === null ? 'Sem vendas' : money(fi.costPerSale), 'Investimento / vendas'],
+      ['Custo por lead', money(f.costPerLead), 'Campanhas de contatos'],
+      ['CPL qualificado', money(f.contactQualifiedCost), 'Só campanhas de contatos'],
+      ['Custo global/qualificado', money(f.globalQualifiedCost), 'Investimento total'],
+      ['ROI estimado', fi.roi === null ? '-' : (fi.roi > 0 ? '+' : '') + pct(fi.roi, 0), fi.roi === null ? 'Sem margem informada' : 'Sobre custos fixos', fi.roi !== null && fi.roi < 0 ? RED : GDARK],
+      [fi.breakEvenSimplified ? 'Equilíbrio simplificado' : 'Ponto de equilíbrio', fi.breakEvenSales === null ? '-' : qty(fi.breakEvenSales) + ' vendas', STATUS[fi.status]]
+    ], 4, 43.5, 22, 2.33);
+    y = section(y + 6, 'Custos considerados no mês');
     y = table(15, y, [{ h: 'Item', w: 120, align: 'left' }, { h: 'Valor', w: 60 }], [
       ['Investimento em anúncios', money(fi.investment)],
-      ['Honorários da agência' + (m.fin.includeAgencyFee ? '' : ' (não incluídos)'), money(fi.agencyFee)],
-      ['Outros custos fixos', money(fi.otherCosts)],
+      ['Honorários' + (m.fin.includeAgencyFee ? '' : ' (não incluídos)'), money(fi.agencyFee)],
+      ['Custos adicionais', money(fi.otherCosts)],
       ['Custos variáveis (' + pct(fi.variableCostPct * 100) + ' do faturamento)', money(fi.variableCosts)],
-      ['Total considerado', money(fi.fixedCosts + fi.variableCosts)]
-    ], { boldLast: true });
+      ['Resultado estimado' + (fi.costsInformed ? '' : ' (sem margem informada)'), money(fi.result)]
+    ], { boldLast: true, rh: 6.6 });
     if (m.mode === 'reverse' && m.reverse && m.reverse.feasible) {
       var r = m.reverse;
-      font('normal', 8, GRAY);
-      T_(15, y + 7, 'Meta: ' + (r.type === 'revenue' ? money(r.target) + ' de faturamento' : qty(r.target) + ' vendas') + '. Investimento necessário: ' + money(r.investment) + ' (atual: ' + money(r.currentInvestment) + '; diferença ' + signedMoney(r.difference) + ').');
+      note(y + 6, 'Meta: ' + (r.type === 'revenue' ? money(r.target) + ' de faturamento' : qty(r.target) + ' vendas') + '. Investimento mínimo: ' + money(r.investment) + ' (atual: ' + money(r.currentInvestment) + '; diferença ' + signedMoney(r.difference) + ').');
     }
 
-    // ---- Página 3: comparativo
-    doc.addPage(); header('Comparativo de resultados', 'Mesmo investimento: ' + money(m.investment) + '/mês');
-    y = section(46, 'Sem TDE x Com TDE');
-    font('normal', 8.5, GRAY); T_(15, y, 'Base: ' + c.baseScenario.name + '   |   Com TDE: ' + c.improvedScenario.name); y += 5;
+    // ---- 4. Comparativo
+    doc.addPage(); header('Comparativo de resultados', 'Mesmo investimento (' + money(m.investment) + ') e ticket');
+    y = section(46, 'Sem Método TDE x Com Método TDE (' + m.scenario.name + ')');
     function dd(a, b, fmt) { var d = b - a; return Math.abs(d) < 1e-9 ? '0' : (d > 0 ? '+' : '') + fmt(d) + (a > 0 ? ' (' + (d > 0 ? '+' : '') + pct(d / a * 100, 0) + ')' : ''); }
-    y = table(15, y, [{ h: 'Métrica', w: 54, align: 'left' }, { h: 'Sem TDE', w: 42 }, { h: 'Com TDE', w: 42 }, { h: 'Diferença', w: 42 }], [
-      ['CPL', money(c.base.funnel.cpl), money(c.improved.funnel.cpl), dd(c.base.funnel.cpl, c.improved.funnel.cpl, money)],
-      ['Leads', qty(c.base.funnel.leads), qty(c.improved.funnel.leads), dd(c.base.funnel.leads, c.improved.funnel.leads, qty)],
-      ['Agendamentos', qty(c.base.funnel.appointments), qty(c.improved.funnel.appointments), dd(c.base.funnel.appointments, c.improved.funnel.appointments, qty)],
-      ['Comparecimentos', qty(c.base.funnel.shows), qty(c.improved.funnel.shows), dd(c.base.funnel.shows, c.improved.funnel.shows, qty)],
-      ['Vendas', qty(c.base.funnel.sales), qty(c.improved.funnel.sales), dd(c.base.funnel.sales, c.improved.funnel.sales, qty)],
-      ['Faturamento', money(c.base.fin.adRevenue), money(c.improved.fin.adRevenue), dd(c.base.fin.adRevenue, c.improved.fin.adRevenue, money)],
-      ['ROAS', xr(c.base.fin.roas), xr(c.improved.fin.roas), c.roasDelta === null ? '-' : (c.roasDelta > 0 ? '+' : '') + nf(1, 1).format(c.roasDelta) + 'x']
-    ], { rh: 8 });
-    y += 8;
-    var cb = [
-      ['Vendas adicionais', (c.extraSales > 0 ? '+' : '') + qty(c.extraSales), 'por mês'],
-      ['Faturamento incremental', signedMoney(c.incrementalRevenue), 'por mês'],
-      ['Redução no CPL', money(c.cplReduction), c.cplReductionPct === null ? '' : pct(c.cplReductionPct, 1) + ' por lead'],
-      ['Eficiência (variação do ROAS)', c.roasMultiple === null ? '-' : nf(1, 1).format(c.roasMultiple) + 'x mais ROAS', 'De ' + xr(c.base.fin.roas) + ' para ' + xr(c.improved.fin.roas)]
-    ];
-    cb.forEach(function (b, i) { box(15 + (i % 2) * 91, y + Math.floor(i / 2) * 27, 89, 24, b[0], b[1], b[2], GDARK); });
-    y += 60;
-    y = section(y, 'Premissas de cada cenário');
-    y = table(15, y, [{ h: 'Premissa', w: 80, align: 'left' }, { h: c.baseScenario.name, w: 50 }, { h: c.improvedScenario.name, w: 50 }], [
-      ['CPL', money(c.baseScenario.params.cpl), money(c.improvedScenario.params.cpl)],
-      ['Lead para agendamento', rateTxt(c.baseScenario.params.scheduleRate), rateTxt(c.improvedScenario.params.scheduleRate)],
-      ['Comparecimento', rateTxt(c.baseScenario.params.showRate), rateTxt(c.improvedScenario.params.showRate)],
-      ['Fechamento', rateTxt(c.baseScenario.params.closeRate), rateTxt(c.improvedScenario.params.closeRate)]
-    ]);
-    font('italic', 8, GRAY); T_(15, y + 8, 'Simulação baseada em premissas configuráveis. Resultados reais podem variar.');
+    var B = c.base, I = c.improved;
+    y = table(15, y, [{ h: 'Métrica', w: 54, align: 'left' }, { h: 'Sem Método TDE', w: 40 }, { h: 'Com Método TDE', w: 40 }, { h: 'Diferença', w: 46 }], [
+      ['Investimento', money(B.funnel.investment), money(I.funnel.investment), '-'],
+      ['CPL dos contatos', money(B.funnel.cpl), money(I.funnel.cpl), dd(B.funnel.cpl, I.funnel.cpl, money)],
+      ['Leads recebidos', qty(B.funnel.leads), qty(I.funnel.leads), dd(B.funnel.leads, I.funnel.leads, qty)],
+      ['Leads qualificados', qty(B.funnel.qualified), qty(I.funnel.qualified), dd(B.funnel.qualified, I.funnel.qualified, qty)],
+      ['Vendas', qty(B.funnel.sales), qty(I.funnel.sales), dd(B.funnel.sales, I.funnel.sales, qty)],
+      ['Faturamento', money(B.fin.adRevenue), money(I.fin.adRevenue), dd(B.fin.adRevenue, I.fin.adRevenue, money)],
+      ['ROAS', xr(B.fin.roas), xr(I.fin.roas), c.roasDelta === null ? '-' : (c.roasDelta > 0 ? '+' : '') + nf(2, 2).format(c.roasDelta) + 'x'],
+      ['Conversão geral', rateTxt(c.conversionBase), rateTxt(c.conversionImproved), (c.conversionDeltaPP >= 0 ? '+' : '') + nf(1, 1).format(c.conversionDeltaPP) + ' p.p.']
+    ], { rh: 7.6 });
+    y += 7;
+    y = boxes(y, [
+      ['Vendas adicionais', signedQty(c.extraSales), 'por mês', GDARK],
+      ['Faturamento extra', signedMoney(c.incrementalRevenue), 'por mês', GDARK],
+      ['Redução do CPL', money(c.cplReduction), c.cplReductionPct === null ? '' : pct(c.cplReductionPct, 0) + ' menor', GDARK],
+      ['Ganho de eficiência comercial', c.conversionRelativePct === null ? '-' : (c.conversionRelativePct > 0 ? '+' : '') + pct(c.conversionRelativePct, 0), rateTxt(c.conversionBase) + ' > ' + rateTxt(c.conversionImproved) + ' de conversão', GDARK]
+    ], 2, 89, 24, 2);
+    note(y + 2, 'Sem Método TDE, oportunidades não convertidas: ' + qty(B.funnel.notQualified) + ' leads não qualificados e ' + qty(B.funnel.qualifiedNotClosed) + ' qualificados que não fecharam. Não são vendas perdidas garantidas.');
+    y = section(y + 14, 'Premissas de cada operação');
+    var ind = m.config.independent;
+    y = table(15, y, [{ h: 'Premissa', w: 80, align: 'left' }, { h: 'Sem Método TDE', w: 50 }, { h: 'Com Método TDE', w: 50 }], [
+      ['CPL dos contatos', money(m.independent.cpl), money(m.op.cpl)],
+      ['Qualificação', rateTxt(m.independent.qualificationRate), rateTxt(m.op.qualificationRate)],
+      ['Fechamento sobre qualificados', rateTxt(m.independent.closeRate), rateTxt(m.op.closeRate)],
+      ['Custo por seguidor', money(m.independent.followerCost), money(m.op.followerCost)],
+      ['Verba seguidores / contatos', pct(m.independent.followersShare * 100, 0) + ' / ' + pct((1 - m.independent.followersShare) * 100, 0), pct(m.op.followersShare * 100, 0) + ' / ' + pct((1 - m.op.followersShare) * 100, 0)],
+      ['Conversas da captação', ind.extraConversationsEnabled ? 'Sim' : 'Não', m.config.acquisition.extraConversationsEnabled ? 'Sim' : 'Não']
+    ], { rh: 6.8 });
+    font('italic', 7.5, GRAY); T_(15, y + 7, 'Comparativo hipotético entre premissas configuráveis. Não é garantia de resultado nem medição causal do método.');
 
-    // ---- Página 4: projeção
-    doc.addPage(); header('Projeção de ' + P.months + ' meses', 'Faturamento mês a mês');
+    // ---- 5. Projeção
+    doc.addPage(); header('Projeção de ' + P.months + ' meses', 'Faturamento e funil mês a mês');
     y = section(46, 'Faturamento projetado por mês');
-    var cx0 = 32, cy0 = y + 2, cw = 163, chh = 58, n = P.rows.length;
+    var cx0 = 32, cy0 = y + 2, cw = 163, chh = 52, n = P.rows.length;
     var maxV = niceMax(Math.max.apply(null, P.rows.map(function (r) { return r.totalRevenue; })) * 1.08);
     for (var t = 0; t <= 4; t++) {
       var gy = cy0 + chh - chh * t / 4;
@@ -1886,8 +2042,7 @@ td.dim { color: var(--dim); }
     }
     var gw = cw / n, bw2 = Math.min(12, gw * 0.6);
     P.rows.forEach(function (r, i) {
-      var bx = cx0 + gw * i + (gw - bw2) / 2;
-      var h1 = chh * r.adRevenue / maxV, h2 = chh * r.leverRevenue / maxV;
+      var bx = cx0 + gw * i + (gw - bw2) / 2, h1 = chh * r.adRevenue / maxV, h2 = chh * r.leverRevenue / maxV;
       doc.setFillColor.apply(doc, GOLD); if (h1 > 0) doc.rect(bx, cy0 + chh - h1, bw2, h1, 'F');
       doc.setFillColor.apply(doc, LEVER); if (h2 > 0) doc.rect(bx, cy0 + chh - h1 - h2, bw2, h2, 'F');
       font('normal', 6.5, GRAY); T_(cx0 + gw * i + gw / 2, cy0 + chh + 4.5, 'M' + r.month, { align: 'center' });
@@ -1896,58 +2051,52 @@ td.dim { color: var(--dim); }
     doc.setFillColor.apply(doc, GOLD); doc.rect(cx0, y - 2.6, 3, 3, 'F'); font('normal', 7.5, GRAY); T_(cx0 + 5, y, 'Faturamento dos anúncios');
     doc.setFillColor.apply(doc, LEVER); doc.rect(cx0 + 50, y - 2.6, 3, 3, 'F'); T_(cx0 + 55, y, 'Faturamento das alavancas adicionais');
     y += 6;
-    [['Investimento acumulado', money(T.investment)], ['Faturamento dos anúncios', money(T.adRevenue)], ['Faturamento total combinado', money(T.totalRevenue)], ['ROAS acumulado', xr(T.roas)]]
-      .forEach(function (b, i) { box(15 + i * 45.5, y, 43.5, 20, b[0], b[1], '', GDARK); });
-    y += 26;
-    var trows = P.rows.map(function (r) { return [String(r.month), money0(r.investment), qty(r.leads), qty(r.adSales), qty(r.leverSales), qty(r.totalSales), money0(r.totalRevenue), xr(r.roas)]; });
-    trows.push(['Total', money0(T.investment), qty(T.leads), qty(T.adSales), qty(T.leverSales), qty(T.totalSales), money0(T.totalRevenue), xr(T.roas)]);
-    y = table(15, y, [{ h: 'Mês', w: 14, align: 'left' }, { h: 'Investimento', w: 28 }, { h: 'Leads', w: 18 }, { h: 'Vendas anúncios', w: 26 }, { h: 'Vendas alavancas', w: 27 }, { h: 'Vendas totais', w: 22 }, { h: 'Faturamento total', w: 28 }, { h: 'ROAS', w: 17 }], trows, { boldLast: true, rh: 6.4 });
-    font('normal', 7, GRAY);
-    var notes = [];
-    notes.push(s.projection.growthEnabled ? 'Investimento cresce ' + pct(s.projection.growthPct * 100) + ' ao mês.' : 'Investimento constante.');
-    notes.push(s.projection.rampEnabled ? 'Rampagem de ' + s.projection.rampMonths + ' meses: eficiência de ' + pct(s.projection.startEfficiency * 100, 0) + ' a ' + pct(s.projection.finalEfficiency * 100, 0) + ' sobre a taxa de agendamento.' : 'Sem rampagem.');
-    notes.push('ROAS acumulado = faturamento dos anúncios acumulado / investimento acumulado.');
-    doc.text(doc.splitTextToSize(pdfSafe(notes.join(' ')), 180), 15, y + 5);
+    y = boxes(y, [['Investimento acumulado', money(T.investment), '', GDARK], ['Faturamento dos anúncios', money(T.adRevenue), '', GDARK], ['Faturamento total', money(T.totalRevenue), '', GDARK], ['ROAS acumulado', xr(T.roas), '', GDARK]], 4, 43.5, 20, 2.33);
+    y += 2;
+    var trows = P.rows.map(function (r) { return [String(r.month), money0(r.investment), qty(r.followers), qty(r.leads), qty(r.qualified), qty(r.adSales), qty(r.leverSales), money0(r.totalRevenue), xr(r.roas)]; });
+    trows.push(['Total', money0(T.investment), qty(T.followers), qty(T.leads), qty(T.qualified), qty(T.adSales), qty(T.leverSales), money0(T.totalRevenue), xr(T.roas)]);
+    y = table(15, y, [{ h: 'Mês', w: 12, align: 'left' }, { h: 'Investimento', w: 24 }, { h: 'Seguidores', w: 20 }, { h: 'Leads', w: 16 }, { h: 'Qualificados', w: 21 }, { h: 'Vendas anúncios', w: 24 }, { h: 'Vendas alav.', w: 19 }, { h: 'Faturamento', w: 26 }, { h: 'ROAS', w: 18 }], trows, { boldLast: true, rh: 6.2 });
+    var notes = [s.projection.growthEnabled ? 'Investimento cresce ' + pct(s.projection.growthPct * 100) + ' ao mês.' : 'Investimento constante.',
+      s.projection.rampEnabled ? 'Rampagem de ' + s.projection.rampMonths + ' meses: eficiência de ' + pct(s.projection.startEfficiency * 100, 0) + ' a ' + pct(s.projection.finalEfficiency * 100, 0) + ' sobre o fechamento.' : 'Sem rampagem.',
+      'Totais = soma dos meses exibidos. ROAS acumulado = faturamento dos anúncios acumulado / investimento acumulado.'];
+    note(y + 5, notes.join(' '));
 
-    // ---- Página 5: estratégias
-    doc.addPage(); header('Estratégias de crescimento', 'Alavancas e premissas');
+    // ---- 6. Estratégias adicionais
+    doc.addPage(); header('Estratégias adicionais', 'Alavancas comerciais e premissas');
     y = section(46, 'Contribuição de cada alavanca em ' + P.months + ' meses');
     var lrows = [['01 · Tráfego Pago', 'Ativa', 'Funil principal', qty(T.adSales), money0(T.adRevenue), money0(T.investment)]];
     m.config.levers.forEach(function (l, i) {
       var tt = T.levers[i];
-      lrows.push(['0' + (i + 2) + ' · ' + l.name, tt.enabled ? 'Ativa' : 'Inativa',
-        '+' + qty(l.salesPerMonth) + '/mês após ' + Math.round(l.maturationMonths) + ' m', tt.enabled ? qty(tt.sales) : '-', tt.enabled ? money0(tt.revenue) : '-', tt.enabled ? money0(tt.cost) : '-']);
+      lrows.push(['0' + (i + 2) + ' · ' + l.name, tt.enabled ? 'Ativa' : 'Inativa', '+' + qty(l.salesPerMonth) + '/mês após ' + Math.round(l.maturationMonths) + ' m',
+        tt.enabled ? qty(tt.sales) : '-', tt.enabled ? money0(tt.revenue) : '-', tt.enabled ? money0(tt.cost) : '-']);
     });
     y = table(15, y, [{ h: 'Alavanca', w: 46, align: 'left' }, { h: 'Status', w: 18 }, { h: 'Regra', w: 40 }, { h: 'Vendas', w: 20 }, { h: 'Faturamento', w: 30 }, { h: 'Custo', w: 26 }], lrows, { rh: 7.5 });
-    y += 7;
-    y = section(y, 'Resultado combinado');
-    [['Total de vendas', qty(T.totalSales), qty(T.adSales) + ' anúncios + ' + qty(T.leverSales) + ' alavancas'], ['Faturamento combinado', money(T.totalRevenue), 'Anúncios + alavancas'],
-      ['Resultado consolidado', money(T.totalResult), 'Após custos considerados'], ['Retorno consolidado', xr(T.consolidatedReturn), 'Faturamento / custos fixos']]
-      .forEach(function (b, i) { box(15 + (i % 2) * 91, y + Math.floor(i / 2) * 27, 89, 24, b[0], b[1], b[2], i === 2 && T.totalResult < 0 ? RED : GDARK); });
-    y += 60;
-    font('normal', 7.5, GRAY);
-    T_(15, y - 4, 'Mês 1: ' + qty(m.levers.now.totalSales) + ' vendas (' + money0(m.levers.now.totalRevenue) + ').  Após maturação: ' + qty(m.levers.mature.totalSales) + ' vendas por mês (' + money0(m.levers.mature.totalRevenue) + ').');
-    y = section(y + 4, 'Premissas utilizadas na simulação');
-    var sp = m.scenario.params;
-    y = table(15, y, [{ h: 'Premissa', w: 110, align: 'left' }, { h: 'Valor', w: 70 }], [
-      ['Cenário atual', m.scenario.name],
-      ['CPL / agendamento / comparecimento / fechamento', money(sp.cpl) + ' / ' + rateTxt(sp.scheduleRate) + ' / ' + rateTxt(sp.showRate) + ' / ' + rateTxt(sp.closeRate)],
-      ['Ticket médio', money(m.ticket)],
-      ['Custos variáveis', pct(fi.variableCostPct * 100) + ' do faturamento'],
-      ['Honorários da agência', m.fin.includeAgencyFee ? money(fi.agencyFee) + ' por mês' : 'Não incluídos'],
-      ['Outros custos fixos', money(fi.otherCosts) + ' por mês'],
-      ['Eficiência de referência', pct(f.efficiency * 100, 0)],
-      ['Regra de quantidades', m.policy === 'expected' ? 'Valores esperados (médias)' : 'Inteiros, arredondados para baixo']
+    y = section(y + 9, 'Resultado combinado');
+    y = boxes(y, [
+      ['Total de vendas', qty(T.totalSales), qty(T.adSales) + ' anúncios + ' + qty(T.leverSales) + ' alavancas', GDARK],
+      ['Faturamento combinado', money(T.totalRevenue), 'Anúncios + alavancas', GDARK],
+      ['Resultado consolidado', money(T.totalResult), 'Após custos considerados', T.totalResult < 0 ? RED : GDARK],
+      ['Retorno consolidado', xr(T.consolidatedReturn), 'Faturamento / custos fixos', GDARK]
+    ], 2, 89, 24, 2);
+    note(y + 2, 'Mês 1: ' + qty(m.levers.now.totalSales) + ' vendas (' + money0(m.levers.now.totalRevenue) + '). Após maturação: ' + qty(m.levers.mature.totalSales) + ' vendas por mês (' + money0(m.levers.mature.totalRevenue) + '). Vendas das alavancas não entram no ROAS dos anúncios.');
+    y = section(y + 14, 'Premissas utilizadas na simulação');
+    table(15, y, [{ h: 'Premissa', w: 110, align: 'left' }, { h: 'Valor', w: 70 }], [
+      ['Investimento / ticket médio', money(m.investment) + ' / ' + money(m.ticket)],
+      ['Distribuição seguidores / contatos', pct(f.followersShare * 100, 0) + ' / ' + pct((1 - f.followersShare) * 100, 0)],
+      ['CPL das campanhas de contatos', money(f.cpl)],
+      ['Custo por seguidor', money(f.followerCost)],
+      ['Qualificação / fechamento (' + m.scenario.name + ')', rateTxt(f.qualificationRate) + ' / ' + rateTxt(m.op.closeRate)],
+      ['Custos variáveis / margem de contribuição', pct(fi.variableCostPct * 100) + ' / ' + pct(fi.contributionMargin * 100)],
+      ['Honorários / custos adicionais', (m.fin.includeAgencyFee ? money(fi.agencyFee) : 'Não incluídos') + ' / ' + money(fi.otherCosts)]
     ], { rh: 6.8 });
 
-    // rodapé em todas as páginas
     var pages = doc.getNumberOfPages();
     for (var pg = 1; pg <= pages; pg++) {
       doc.setPage(pg);
       var dark = pg === 1;
       doc.setDrawColor.apply(doc, dark ? BORDER : LINE); doc.setLineWidth(0.2); doc.line(15, 282, 195, 282);
       font('normal', 6.8, dark ? SOFT : GRAY);
-      T_(15, 287, 'Valores são projeções ilustrativas baseadas em premissas configuráveis e não constituem garantia de resultado.');
+      T_(15, 287, 'Projeções hipotéticas baseadas em premissas configuráveis. Não constituem garantia de resultado.');
       T_(195, 287, 'Página ' + pg + ' de ' + pages, { align: 'right' });
     }
     return doc;
@@ -1959,7 +2108,7 @@ td.dim { color: var(--dim); }
   bindChartTip();
   syncInputs();
   recompute();
-  window.__castelo = { get model() { return model; }, get sim() { return sim; }, get config() { return config; }, summaryText: summaryText, buildPdf: function () { return buildPdf(model, sim); } };
+  window.__tde = { get model() { return model; }, get sim() { return sim; }, get config() { return config; }, summaryText: summaryText, buildPdf: function () { return buildPdf(model, sim); } };
 })();
 
 </script>

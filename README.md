@@ -15,13 +15,17 @@ Aplicação web estática (um único arquivo HTML), sem login, backend ou banco 
 - `build.js` — junta tudo em `index.html` e `dist/` (`npm run build`). Edite os arquivos de `src/` e rode o build antes de publicar.
 
 ## Testes
-- `npm test` — 17 testes do motor (funil, arredondamento, meta reversa, alavancas, projeção, equilíbrio, casos extremos).
-- `npm run test:ui` — 43 verificações no navegador (Playwright) cobrindo os critérios de aceite.
+- `npm test` — 22 testes do motor, incluindo todos os números oficiais do documento TDE.
+- `npm run test:ui` — verificações no navegador (Playwright) cobrindo os testes obrigatórios.
 
-## Regras de cálculo
-- Leads = investimento ÷ CPL; agendamentos, comparecimentos e vendas aplicam as taxas do cenário.
-- Exibição padrão em inteiros: cada etapa é arredondada para baixo, então nenhuma etapa supera a anterior e faturamento = vendas exibidas × ticket. Opcional: valores esperados (1 casa decimal).
-- ROAS = faturamento dos anúncios ÷ investimento em anúncios. ROI = (faturamento − custos variáveis − custos fixos) ÷ custos fixos; aparece como "simplificado" sem custos variáveis.
-- Alavancas somam vendas a partir do mês seguinte à maturação, nunca entram no ROAS, e seus custos contam desde o mês 1.
-- Rampagem: a eficiência multiplica a taxa de agendamento e evolui linearmente da inicial à final.
-- Totais da projeção são a soma dos meses; ROAS total = faturamento acumulado ÷ investimento acumulado.
+## Regras de cálculo (modelo TDE)
+- Verba de seguidores = investimento × % seguidores; verba de contatos = o restante (padrão 30/70).
+- Seguidores = verba de seguidores ÷ custo por seguidor (histórico R$ 1.058,58 ÷ 784) + verba de contatos × 161 ÷ 2.301,89. Seguidores nunca viram vendas.
+- Leads = verba de contatos ÷ CPL (R$ 7,50) + conversas da captação (verba de seguidores × 21 ÷ 1.058,58, quando ativado).
+- Qualificados = leads × qualificação (30%). Vendas = qualificados × fechamento do cenário (Conservador 20%, Moderado 32%, Agressivo 48%).
+- Cálculo com valores esperados; inteiros arredondados ao mais próximo só no final, com subtotais reconciliados. Faturamento = vendas inteiras × ticket.
+- Sem Método TDE: operação independente (CPL R$ 12,50, qualificação 20%, fechamento 20%). Com Método TDE = cenário selecionado.
+- Meta reversa: menor investimento (em centavos) cujas vendas esperadas atingem a meta, pelas mesmas fórmulas.
+- ROI só com custos variáveis (margem de contribuição) informados; sem margem, o ponto de equilíbrio é simplificado.
+- Alavancas somam vendas a partir do mês seguinte à maturação e nunca entram no ROAS.
+- Totais da projeção = soma dos meses exibidos; ROAS acumulado = faturamento dos anúncios acumulado ÷ investimento acumulado.

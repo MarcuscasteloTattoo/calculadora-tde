@@ -36,7 +36,7 @@
         </div>
 
         <div class="field">
-          <span class="lbl">Modo de cálculo <span class="tip" tabindex="0" data-tip="Padrão: você informa o investimento e vê os resultados. Meta reversa: você informa a meta e a calculadora mostra o investimento necessário.">?</span></span>
+          <span class="lbl">Modo de cálculo <span class="tip" tabindex="0" data-tip="Padrão: você informa o investimento e vê os resultados. Meta reversa: você informa a meta de vendas ou de faturamento e a calculadora mostra o investimento mínimo necessário.">?</span></span>
           <div class="seg" role="group" aria-label="Modo de cálculo" id="seg-mode">
             <button type="button" data-mode="standard">Modo padrão</button>
             <button type="button" data-mode="reverse">Meta reversa</button>
@@ -44,7 +44,7 @@
         </div>
 
         <div class="field" id="f-investment">
-          <label class="lbl" for="in-investment">Investimento mensal em anúncios <span class="tip" tabindex="0" data-tip="Valor investido por mês em mídia paga (Meta Ads, Google etc.), sem honorários da agência.">?</span></label>
+          <label class="lbl" for="in-investment">Investimento mensal em anúncios <span class="tip" tabindex="0" data-tip="Valor investido por mês em mídia paga, somando captação de seguidores e geração de contatos.">?</span></label>
           <div class="prefix"><span>R$</span><input class="inp num" id="in-investment" type="text" inputmode="decimal" autocomplete="off"></div>
           <span class="err" id="err-investment"></span>
         </div>
@@ -73,7 +73,7 @@
 
         <div class="field" style="margin-top:18px">
           <div class="row-between">
-            <span class="lbl">Cenário comercial atual <span class="tip" tabindex="0" data-tip="Representa como o estúdio atende e vende hoje. Cada cenário tem CPL e taxas próprias, editáveis.">?</span></span>
+            <span class="lbl">Cenário comercial <span class="tip" tabindex="0" data-tip="Os três cenários usam o mesmo investimento, leads, seguidores e qualificação. Muda apenas a taxa de fechamento comercial.">?</span></span>
             <button class="linkbtn" type="button" id="btn-params"><i data-icon="sliders"></i>Configurar parâmetros</button>
           </div>
           <div class="scen" id="scen-buttons" role="group" aria-label="Cenário"></div>
@@ -83,38 +83,65 @@
         </div>
       </section>
 
-      <section class="card" aria-labelledby="t-costs">
-        <div class="card-h"><div><h2 id="t-costs">Custos considerados</h2><p>Base do ROI, do resultado e do ponto de equilíbrio. Valores definidos em Configurações.</p></div></div>
-        <div id="costs-list"></div>
-        <div style="margin-top:14px" class="row-between">
-          <button class="switch" type="button" role="switch" id="sw-fee" aria-checked="true"><span class="track"></span>Incluir honorários da agência</button>
-          <button class="linkbtn" type="button" id="btn-costs"><i data-icon="sliders"></i>Editar custos</button>
+      <section class="card" aria-labelledby="t-dist">
+        <div class="card-h"><div><h2 id="t-dist">Distribuição do Investimento</h2><p>Como a verba mensal se divide entre audiência e contatos.</p></div></div>
+        <div class="dist-bar" id="dist-bar" aria-hidden="true"></div>
+        <div class="dist-grid">
+          <div class="dist-item">
+            <span class="dist-dot follow"></span>
+            <div class="field"><label class="lbl" for="in-share-followers">Captação de seguidores</label><div class="suffix"><input class="inp num" id="in-share-followers" type="text" inputmode="decimal"><span>%</span></div><span class="err" id="err-share-followers"></span></div>
+            <div class="dist-val" id="dist-followers"></div>
+          </div>
+          <div class="dist-item">
+            <span class="dist-dot contact"></span>
+            <div class="field"><label class="lbl" for="in-share-contacts">Geração de contatos</label><div class="suffix"><input class="inp num" id="in-share-contacts" type="text" inputmode="decimal"><span>%</span></div><span class="err" id="err-share-contacts"></span></div>
+            <div class="dist-val" id="dist-contacts"></div>
+          </div>
         </div>
       </section>
     </div>
 
-    <section class="card" aria-labelledby="t-funnel">
-      <div class="card-h"><div><h2 id="t-funnel">Funil de Conversão do Investimento</h2><p id="funnel-sub">Mês de referência, com a operação madura.</p></div></div>
-      <div class="funnel" id="funnel"></div>
-      <p class="policy-note" id="policy-note"></p>
-    </section>
+    <div class="col">
+      <section class="card" aria-labelledby="t-aud">
+        <div class="card-h"><div><h2 id="t-aud">Crescimento de Audiência</h2><p>Seguidores estimados por mês com a verba de anúncios.</p></div></div>
+        <div id="audience"></div>
+        <div class="row-between" style="margin-top:14px">
+          <button class="switch" type="button" role="switch" id="sw-indirect" aria-checked="true"><span class="track"></span>Incluir seguidores adicionais das campanhas de contatos</button>
+        </div>
+        <p class="policy-note">Seguidores representam crescimento de audiência e relacionamento futuro. Eles não são convertidos em vendas na projeção.</p>
+      </section>
+
+      <section class="card" aria-labelledby="t-funnel">
+        <div class="card-h"><div><h2 id="t-funnel">Funil de Conversão Comercial</h2><p id="funnel-sub">Mês de referência, com a operação madura.</p></div></div>
+        <div class="funnel" id="funnel"></div>
+        <div class="row-between" style="margin-top:14px">
+          <button class="switch" type="button" role="switch" id="sw-extra" aria-checked="true"><span class="track"></span>Incluir conversas adicionais geradas pela captação</button>
+        </div>
+        <p class="policy-note" id="policy-note"></p>
+      </section>
+    </div>
   </div>
 
   <section class="card" aria-labelledby="t-kpi">
-    <div class="card-h"><div><h2 id="t-kpi">Indicadores financeiros</h2><p>Somente vendas atribuídas ao tráfego pago, por mês. Alavancas adicionais aparecem no consolidado abaixo.</p></div><span id="status-pill"></span></div>
-    <div class="kpis" id="kpis"></div>
-    <div class="be" id="breakeven"></div>
+    <div class="card-h"><div><h2 id="t-kpi">Indicadores Financeiros</h2><p>Somente vendas atribuídas aos anúncios, por mês. Alavancas adicionais aparecem no consolidado.</p></div><span id="status-pill"></span></div>
+    <div class="kpis k4" id="kpis"></div>
+    <div class="ind-foot">
+      <div class="box"><div class="be" id="breakeven"></div></div>
+      <div class="box">
+        <div id="costs-list"></div>
+        <div style="margin-top:12px" class="row-between">
+          <button class="switch" type="button" role="switch" id="sw-fee" aria-checked="true"><span class="track"></span>Incluir honorários</button>
+          <button class="linkbtn" type="button" id="btn-costs"><i data-icon="sliders"></i>Editar custos</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="card" aria-labelledby="t-cmp">
     <div class="card-h center-h"><div><h2 id="t-cmp">Comparativo de Resultados</h2><p>Visualize o potencial de crescimento com o Método Tatuador de Elite.</p></div></div>
-    <div class="cmp-ctrl">
-      <div class="field"><label class="lbl" for="sel-base">Cenário base (sem TDE)</label><select class="inp" id="sel-base"></select></div>
-      <div class="field"><label class="lbl" for="sel-imp">Cenário melhorado (com TDE)</label><select class="inp" id="sel-imp"></select></div>
-    </div>
     <div class="cmp" id="cmp"></div>
     <div class="kpis four" id="cmp-kpis"></div>
-    <p class="foot-note">Simulação baseada em premissas configuráveis. Resultados reais podem variar.</p>
+    <p class="foot-note">Comparativo hipotético entre premissas configuráveis, com o mesmo investimento e ticket nos dois lados. Não é garantia de resultado nem medição causal do método. Considera apenas o funil dos anúncios.</p>
   </section>
 
   <section class="card" aria-labelledby="t-proj">
@@ -133,7 +160,7 @@
         </div>
       </div>
       <div class="box">
-        <button class="switch" type="button" role="switch" id="sw-ramp" aria-checked="false"><span class="track"></span>Tempo de rampagem <span class="tip" tabindex="0" data-tip="Nos primeiros meses o atendimento ainda está ajustando. A eficiência multiplica a taxa de agendamento e evolui de forma linear da inicial até a final no período de maturação.">?</span></button>
+        <button class="switch" type="button" role="switch" id="sw-ramp" aria-checked="false"><span class="track"></span>Tempo de rampagem <span class="tip" tabindex="0" data-tip="Nos primeiros meses o atendimento ainda está ajustando. A eficiência multiplica a taxa de fechamento e evolui de forma linear da inicial até a final no período de maturação.">?</span></button>
         <div class="mini-grid">
           <div class="field"><label class="lbl" for="in-ramp">Maturação (meses)</label><input class="inp num" id="in-ramp" type="text" inputmode="numeric"><span class="err" id="err-ramp"></span></div>
           <div class="field"><label class="lbl" for="in-eff-start">Eficiência inicial</label><div class="suffix"><input class="inp num" id="in-eff-start" type="text" inputmode="decimal"><span>%</span></div><span class="err" id="err-eff-start"></span></div>
@@ -144,8 +171,11 @@
     <div class="row-between">
       <div class="seg" role="group" aria-label="Métrica do gráfico" id="seg-metric">
         <button type="button" data-metric="revenue">Faturamento</button>
-        <button type="button" data-metric="investment">Investimento</button>
         <button type="button" data-metric="sales">Vendas</button>
+        <button type="button" data-metric="followers">Seguidores</button>
+        <button type="button" data-metric="leads">Leads</button>
+        <button type="button" data-metric="qualified">Qualificados</button>
+        <button type="button" data-metric="investment">Investimento</button>
         <button type="button" data-metric="roas">ROAS</button>
         <button type="button" data-metric="compare">Comparativo</button>
       </div>
