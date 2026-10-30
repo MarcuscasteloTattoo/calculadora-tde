@@ -1,10 +1,10 @@
-# Calculadora de ROI — Castelo Ads
+# Calculadora de ROI — Tatuador de Elite
 
 Aplicação web estática (um único arquivo HTML), sem login, backend ou banco de dados.
 
 ## Publicar
 - **`index.html` na raiz** já é a aplicação completa. Funciona direto no GitHub Pages (Settings → Pages → branch `main`, pasta `/`), Netlify, Vercel ou Cloudflare Pages, sem etapa de build.
-- Cópia equivalente: `dist/calculadora-roi-castelo-ads.html`. Suba em qualquer hospedagem estática (Netlify, Vercel, Hostinger, Cloudflare Pages, a pasta pública de gestao.casteloads.com) e aponte o domínio que quiser.
+- Cópia equivalente: `dist/calculadora-roi-tde.html`. Suba em qualquer hospedagem estática (Netlify, Vercel, Hostinger, Cloudflare Pages, seu próprio domínio) e aponte o domínio que quiser.
 - Única dependência externa: jsPDF 2.5.1 (cdnjs) para o PDF e a fonte Inter (Google Fonts).
 - Nenhum dado de prospect sai do navegador. Configurações ficam no `localStorage` de cada navegador; use Exportar/Importar JSON para levar a outro computador.
 

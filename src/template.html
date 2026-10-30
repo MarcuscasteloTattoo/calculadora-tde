@@ -1,6 +1,7 @@
-<title>Calculadora de ROI Castelo Ads</title>
+<title>Calculadora de ROI TDE</title>
+<link rel="icon" type="image/png" href="{{SYMBOL}}">
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Simulador de investimento em anúncios, funil de vendas e projeção de resultados para tatuadores e estúdios.">
+<meta name="description" content="Tatuador de Elite · Projeção estratégica de investimento e resultados para tatuadores.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
@@ -11,16 +12,17 @@
 <div class="wrap" id="app">
   <header class="top">
     <div class="brand">
-      <div class="mark" aria-hidden="true"><i data-icon="castle"></i></div>
+      <img class="brand-logo" id="brand-logo" src="{{LOGO}}" alt="Tatuador de Elite">
+      <span class="brand-sep" aria-hidden="true"></span>
       <div>
         <h1>Calculadora de ROI</h1>
-        <p>Castelo Ads · Projeção de investimento em anúncios para tatuadores e estúdios</p>
+        <p>Projeção estratégica de investimento e resultados para tatuadores.</p>
       </div>
     </div>
     <div class="actions">
-      <button class="btn" id="btn-new" type="button"><i data-icon="refresh"></i>Nova simulação</button>
       <button class="btn" id="btn-copy" type="button"><i data-icon="message"></i>Copiar resumo</button>
       <button class="btn" id="btn-settings" type="button"><i data-icon="sliders"></i>Configurações</button>
+      <button class="btn" id="btn-new" type="button"><i data-icon="refresh"></i>Nova simulação</button>
     </div>
   </header>
 
@@ -106,10 +108,10 @@
   </section>
 
   <section class="card" aria-labelledby="t-cmp">
-    <div class="card-h center-h"><div><h2 id="t-cmp">Comparativo de Resultados</h2><p>Veja o impacto potencial de uma operação comercial estruturada com a Castelo Ads.</p></div></div>
+    <div class="card-h center-h"><div><h2 id="t-cmp">Comparativo de Resultados</h2><p>Visualize o potencial de crescimento com o Método Tatuador de Elite.</p></div></div>
     <div class="cmp-ctrl">
-      <div class="field"><label class="lbl" for="sel-base">Cenário base (sem Castelo Ads)</label><select class="inp" id="sel-base"></select></div>
-      <div class="field"><label class="lbl" for="sel-imp">Cenário melhorado (com Castelo Ads)</label><select class="inp" id="sel-imp"></select></div>
+      <div class="field"><label class="lbl" for="sel-base">Cenário base (sem TDE)</label><select class="inp" id="sel-base"></select></div>
+      <div class="field"><label class="lbl" for="sel-imp">Cenário melhorado (com TDE)</label><select class="inp" id="sel-imp"></select></div>
     </div>
     <div class="cmp" id="cmp"></div>
     <div class="kpis four" id="cmp-kpis"></div>

@@ -24,6 +24,7 @@ window.jspdf = { jsPDF: function () {
     roundedRect: function (x, y, w, h, rx, ry, s) { chk(x, y, w, h); ops.push({ op: 'rect', page: page, x: x, y: y, w: w, h: h, s: s, r: rx, fill: st.fill.slice(), draw: st.draw.slice(), lw: st.lw }); },
     line: function (x1, y1, x2, y2) { chk(x1, y1, x2, y2); ops.push({ op: 'line', page: page, x1: x1, y1: y1, x2: x2, y2: y2, draw: st.draw.slice(), lw: st.lw }); },
     lines: function (segs, x, y) { chk(x, y); ops.push({ op: 'lines', page: page, segs: segs, x: x, y: y, draw: st.draw.slice(), lw: st.lw }); },
+    addImage: function (src, fmt, x, y, w, h) { chk(x, y, w, h); if (String(src).indexOf('data:image/png') !== 0) throw new Error('logo ausente'); ops.push({ op: 'image', page: page, x: x, y: y, w: w, h: h }); },
     addPage: function () { page = ++maxPage; },
     setPage: function (p) { page = p; },
     getNumberOfPages: function () { return maxPage; },

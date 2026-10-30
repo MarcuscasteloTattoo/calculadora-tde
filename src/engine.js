@@ -1,4 +1,4 @@
-/* Motor central de cálculo — Calculadora de ROI Castelo Ads
+/* Motor central de cálculo — Calculadora de ROI Tatuador de Elite
  * Funções puras. Toda a interface e o PDF consomem computeAll().
  */
 (function (root) {
@@ -41,8 +41,8 @@
           description: 'Operação comercial otimizada, com atendimento ágil, follow-up consistente e estratégias de conversão bem executadas.' }
       ],
       castelo: {
-        id: 'castelo', name: 'Com Castelo Ads', cpl: 12, scheduleRate: 0.20, showRate: 0.85, closeRate: 0.70,
-        description: 'Campanhas otimizadas e processo comercial estruturado pelo método Castelo Ads.',
+        id: 'castelo', name: 'Método TDE', cpl: 12, scheduleRate: 0.20, showRate: 0.85, closeRate: 0.70,
+        description: 'Campanhas otimizadas e processo comercial estruturado pelo Método Tatuador de Elite.',
         defaultBaseId: 'selected',   // 'selected' = cenário escolhido no card do prospect
         defaultImprovedId: 'castelo'
       },
@@ -80,6 +80,9 @@
       if (input.castelo[f] !== undefined && typeof input.castelo[f] === typeof c.castelo[f]) c.castelo[f] = input.castelo[f];
     });
     c.castelo.id = 'castelo';
+    // Migração da marca anterior: textos padrão antigos passam a usar o nome TDE.
+    if (/castelo/i.test(c.castelo.name)) c.castelo.name = d.castelo.name;
+    if (/castelo/i.test(c.castelo.description)) c.castelo.description = d.castelo.description;
     if (Array.isArray(input.scenarios) && input.scenarios.length) {
       c.scenarios = input.scenarios.filter(isObj).map(function (s, i) {
         return {

@@ -1,8 +1,8 @@
 {
-  "name": "calculadora-roi-castelo-ads",
+  "name": "calculadora-roi-tde",
   "version": "1.0.0",
   "private": true,
-  "description": "Calculadora de ROI para tatuadores e estúdios - Castelo Ads",
+  "description": "Calculadora de ROI - Tatuador de Elite",
   "scripts": {
     "build": "node build.js",
     "test": "node --test test/engine.test.js",

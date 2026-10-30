@@ -4,7 +4,6 @@
 
   // ------------------------------------------------------------ ícones (Lucide, traço 2)
   var ICONS = {
-    castle: '<path d="M3 21V9h3V5h3v4h2V5h2v4h2V5h3v4h3v12"/><path d="M10 21v-4a2 2 0 0 1 4 0v4"/><path d="M2 21h20"/>',
     refresh: '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
     message: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
     sliders: '<path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/>',
@@ -303,9 +302,9 @@
       '<div class="kv"><span>Comparecimentos necessários</span><b>' + qty(r.shows) + '</b></div>' +
       '<div class="kv"><span>Agendamentos necessários</span><b>' + qty(r.appointments) + '</b></div>' +
       '<div class="kv"><span>Leads necessários</span><b>' + qty(r.leads) + '</b></div>' +
-      '<div class="kv" style="border-top:1px solid var(--line);padding-top:10px"><span>Investimento necessário</span><b style="color:var(--green);font-size:16px">' + money(r.investment) + '</b></div>' +
+      '<div class="kv" style="border-top:1px solid var(--line);padding-top:10px"><span>Investimento necessário</span><b style="color:var(--gold);font-size:16px">' + money(r.investment) + '</b></div>' +
       '<div class="kv"><span>Investimento atual</span><b>' + money(r.currentInvestment) + '</b></div>' +
-      '<div class="kv"><span>Diferença</span><b style="color:' + (diff > 0 ? 'var(--amber)' : 'var(--green)') + '">' + diffTxt + '</b></div>' +
+      '<div class="kv"><span>Diferença</span><b style="color:' + (diff > 0 ? 'var(--fg)' : 'var(--gold)') + '">' + diffTxt + '</b></div>' +
       '</div><p class="hint" style="margin-top:8px">Calculado com as taxas do cenário ' + esc(model.scenario.name) + '. Considera somente vendas dos anúncios.</p>';
   }
 
@@ -325,7 +324,7 @@
     var base = f.leads > 0 ? f.leads : 1;
     function stage(ic, name, value, sub, w, final) {
       return '<div class="stage' + (final ? ' final' : '') + '"><div class="ic">' + icon(ic) + '</div><div style="min-width:0"><div class="nm">' + name + '</div>' +
-        (sub ? '<div class="sub">' + sub + '</div>' : '') + '</div><div class="value">' + value + '</div>' +
+        (sub ? '<div class="sub">' + sub + '</div>' : '') + '</div><div class="value' + (ic !== 'dollar' ? ' gold' : '') + '">' + value + '</div>' +
         (w !== null ? '<div class="bar" style="width:' + Math.max(0, Math.min(100, w)) + '%"></div>' : '') + '</div>';
     }
     function conn(t) { return '<div class="conn">' + t + '</div>'; }
@@ -381,7 +380,7 @@
   function scenarioOptions(includeSelected, selectedVal) {
     var c = cfg(), opts = [];
     if (includeSelected) opts.push(['selected', 'Cenário selecionado (' + model.scenario.name + ')']);
-    opts.push(['castelo', c.castelo.name + ' (Castelo Ads)']);
+    opts.push(['castelo', c.castelo.name + (/TDE|Elite/i.test(c.castelo.name) ? '' : ' (TDE)')]);
     c.scenarios.forEach(function (s) { opts.push([s.id, s.name]); });
     return opts.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (o[0] === selectedVal ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('');
   }
@@ -418,7 +417,7 @@
         rows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + r[side] + '</dd>'; }).join('') +
         '<dt>ROAS</dt><dd>' + xr(roas) + '</dd></dl></div>';
     }
-    $('cmp').innerHTML = panel('sem', 'Sem Castelo Ads', 'x', c.baseScenario, 1, B.fin.roas) + panel('com', 'Com Castelo Ads', 'check', c.improvedScenario, 2, I.fin.roas);
+    $('cmp').innerHTML = panel('sem', 'Sem TDE', 'x', c.baseScenario, 1, B.fin.roas) + panel('com', 'Com TDE', 'check', c.improvedScenario, 2, I.fin.roas);
     $('cmp-kpis').innerHTML =
       kpi('Vendas adicionais', (c.extraSales > 0 ? '+' : '') + qty(c.extraSales), 'por mês', c.extraSales >= 0 ? 'pos' : 'neg') +
       kpi('Faturamento incremental', signedMoney(c.incrementalRevenue), 'por mês', c.incrementalRevenue >= 0 ? 'pos' : 'neg') +
@@ -447,20 +446,20 @@
   function chartData() {
     var P = model.projection, rows = P.rows, labels = rows.map(function (r) { return 'Mês ' + r.month; });
     var m = sim.chartMetric;
-    if (m === 'investment') return { type: 'bar', labels: labels, fmt: money, axis: moneyC, series: [{ name: 'Investimento em anúncios', color: 'var(--green-2)', values: rows.map(function (r) { return r.investment; }) }] };
+    if (m === 'investment') return { type: 'bar', labels: labels, fmt: money, axis: moneyC, series: [{ name: 'Investimento em anúncios', color: 'var(--gold)', values: rows.map(function (r) { return r.investment; }) }] };
     if (m === 'sales') return { type: 'bar', stacked: true, labels: labels, fmt: qty, axis: function (v) { return nf(0, 1).format(v); }, series: [
-      { name: 'Vendas dos anúncios', color: 'var(--green)', values: rows.map(function (r) { return r.adSales; }) },
-      { name: 'Vendas das alavancas', color: 'var(--blue)', values: rows.map(function (r) { return r.leverSales; }) }] };
-    if (m === 'roas') return { type: 'line', labels: labels, fmt: xr, axis: function (v) { return nf(0, 1).format(v) + 'x'; }, series: [{ name: 'ROAS publicitário', color: 'var(--green)', values: rows.map(function (r) { return r.roas; }) }] };
+      { name: 'Vendas dos anúncios', color: 'var(--gold)', values: rows.map(function (r) { return r.adSales; }) },
+      { name: 'Vendas das alavancas', color: 'var(--lever)', values: rows.map(function (r) { return r.leverSales; }) }] };
+    if (m === 'roas') return { type: 'line', labels: labels, fmt: xr, axis: function (v) { return nf(0, 1).format(v) + 'x'; }, series: [{ name: 'ROAS publicitário', color: 'var(--gold)', values: rows.map(function (r) { return r.roas; }) }] };
     if (m === 'compare') {
       var cp = model.compareProjection;
       return { type: 'line', labels: labels, fmt: money, axis: moneyC, series: [
-        { name: 'Sem Castelo Ads · ' + model.compare.baseScenario.name, color: 'var(--red)', values: cp.base.rows.map(function (r) { return r.adRevenue; }) },
-        { name: 'Com Castelo Ads · ' + model.compare.improvedScenario.name, color: 'var(--green)', values: cp.improved.rows.map(function (r) { return r.adRevenue; }) }] };
+        { name: 'Sem TDE · ' + model.compare.baseScenario.name, color: 'var(--muted)', values: cp.base.rows.map(function (r) { return r.adRevenue; }) },
+        { name: 'Com TDE · ' + model.compare.improvedScenario.name, color: 'var(--gold)', values: cp.improved.rows.map(function (r) { return r.adRevenue; }) }] };
     }
     return { type: 'bar', stacked: true, labels: labels, fmt: money, axis: moneyC, series: [
-      { name: 'Faturamento dos anúncios', color: 'var(--green)', values: rows.map(function (r) { return r.adRevenue; }) },
-      { name: 'Faturamento das alavancas', color: 'var(--blue)', values: rows.map(function (r) { return r.leverRevenue; }) }] };
+      { name: 'Faturamento dos anúncios', color: 'var(--gold)', values: rows.map(function (r) { return r.adRevenue; }) },
+      { name: 'Faturamento das alavancas', color: 'var(--lever)', values: rows.map(function (r) { return r.leverRevenue; }) }] };
   }
   var lastChart = null;
   function renderChart() {
@@ -527,7 +526,7 @@
     var body = P.rows.map(function (r) {
       return '<tr>' + [r.month, money0(r.investment), ramp ? pct(r.efficiency * 100, 0) : null, qty(r.leads), qty(r.appointments), qty(r.shows), qty(r.adSales),
         '<span class="' + (r.leverSales ? '' : 'dim') + '">' + qty(r.leverSales) + '</span>', qty(r.totalSales), money0(r.adRevenue), money0(r.leverRevenue), money0(r.totalRevenue), xr(r.roas),
-        '<span style="color:' + (r.totalResult >= 0 ? 'var(--green)' : 'var(--red)') + '">' + money0(r.totalResult) + '</span>']
+        '<span style="color:' + (r.totalResult >= 0 ? 'var(--gold)' : 'var(--red)') + '">' + money0(r.totalResult) + '</span>']
         .filter(function (v) { return v !== null; }).map(function (v, k) { return '<td' + ((k === 6 + (ramp ? 1 : 0) || k === 9 + (ramp ? 1 : 0)) ? ' class="lv"' : '') + '>' + v + '</td>'; }).join('') + '</tr>';
     }).join('');
     var t = P.totals;
@@ -557,7 +556,7 @@
         '<span class="chip">' + (mat > 0 ? 'A partir do mês ' + (mat + 1) : 'Por mês') + ': <b>+' + qty(l.salesPerMonth) + ' · ' + money0(l.salesPerMonth * tk) + '</b></span>' +
         '<span class="chip">Em ' + months + ' meses: <b>' + qty(tot.sales) + ' ' + plural(tot.sales, 'venda', 'vendas') + ' · ' + money0(tot.revenue) + '</b></span>' +
         (tot.cost > 0 ? '<span class="chip">Custo no período: <b>' + money0(tot.cost) + '</b></span>' : '') +
-        (mat >= months ? '<span class="chip" style="color:var(--amber);border-color:var(--amber)">Maturação maior que o período da projeção</span>' : '') +
+        (mat >= months ? '<span class="chip" style="color:var(--fg);border-color:var(--muted)">Maturação maior que o período da projeção</span>' : '') +
         '</div>' : '';
       html += '<div class="lever' + (on ? ' on' : '') + '"><div class="ic">' + icon(LEVER_ICONS[l.id] || 'trend') + '</div><div style="min-width:0"><h4>Alavanca 0' + (idx + 2) + ' · ' + esc(l.name) + '</h4>' +
         '<div class="rule">' + rule + '</div><div class="desc">' + esc(l.description) + '</div>' + contrib + '</div>' +
@@ -570,25 +569,25 @@
     function block(title, F) {
       return '<div class="box"><h5>' + title + '</h5>' +
         '<div class="kv"><span>Vendas dos anúncios</span><b>' + qty(F.adSales) + '</b></div>' +
-        '<div class="kv"><span>Vendas das alavancas</span><b style="color:var(--blue)">' + qty(F.leverSales) + '</b></div>' +
+        '<div class="kv"><span>Vendas das alavancas</span><b style="color:var(--lever)">' + qty(F.leverSales) + '</b></div>' +
         '<div class="kv"><span>Total de vendas</span><b>' + qty(F.totalSales) + '</b></div>' +
         '<div class="kv tot"><span>Faturamento combinado</span><b>' + money(F.totalRevenue) + '</b></div>' +
-        '<div class="kv"><span>Resultado consolidado</span><b style="color:' + (F.totalResult >= 0 ? 'var(--green)' : 'var(--red)') + '">' + money(F.totalResult) + '</b></div></div>';
+        '<div class="kv"><span>Resultado consolidado</span><b style="color:' + (F.totalResult >= 0 ? 'var(--gold)' : 'var(--red)') + '">' + money(F.totalResult) + '</b></div></div>';
     }
     var T = P.totals;
     var acc = '<div class="box"><h5>Acumulado em ' + months + ' meses</h5>' +
       '<div class="kv"><span>Vendas dos anúncios</span><b>' + qty(T.adSales) + '</b></div>' +
-      '<div class="kv"><span>Vendas das alavancas</span><b style="color:var(--blue)">' + qty(T.leverSales) + '</b></div>' +
+      '<div class="kv"><span>Vendas das alavancas</span><b style="color:var(--lever)">' + qty(T.leverSales) + '</b></div>' +
       '<div class="kv"><span>Total de vendas</span><b>' + qty(T.totalSales) + '</b></div>' +
       '<div class="kv tot"><span>Faturamento combinado</span><b>' + money(T.totalRevenue) + '</b></div>' +
       '<div class="kv"><span>ROAS publicitário</span><b>' + xr(T.roas) + '</b></div>' +
       '<div class="kv"><span>Retorno consolidado ' + tip('Faturamento combinado ÷ custos fixos totais (anúncios, honorários incluídos, outros custos e custos das alavancas).') + '</span><b>' + xr(T.consolidatedReturn) + '</b></div>' +
-      '<div class="kv"><span>Resultado consolidado</span><b style="color:' + (T.totalResult >= 0 ? 'var(--green)' : 'var(--red)') + '">' + money(T.totalResult) + '</b></div></div>';
+      '<div class="kv"><span>Resultado consolidado</span><b style="color:' + (T.totalResult >= 0 ? 'var(--gold)' : 'var(--red)') + '">' + money(T.totalResult) + '</b></div></div>';
     $('cons').innerHTML = block('Resultado mensal atual (mês 1)', L.now) + block('Mensal após maturação' + (L.maturationMonth > 1 ? ' (mês ' + L.maturationMonth + ')' : ''), L.mature) + acc;
   }
 
   // ------------------------------------------------------------ configurações
-  var TABS = [['financeiro', 'Parâmetros financeiros'], ['comerciais', 'Taxas comerciais'], ['castelo', 'Castelo Ads'], ['alavancas', 'Alavancas'], ['projecao', 'Projeção']];
+  var TABS = [['financeiro', 'Parâmetros financeiros'], ['comerciais', 'Taxas comerciais'], ['castelo', 'Método TDE'], ['alavancas', 'Alavancas'], ['projecao', 'Projeção']];
   var currentTab = 'financeiro';
 
   function getPath(o, path) { return path.split('.').reduce(function (a, k) { return a == null ? a : a[k]; }, o); }
@@ -648,8 +647,8 @@
     }
     if (tab === 'castelo') {
       var opts = [['selected', 'Cenário selecionado no atendimento']].concat(d.scenarios.map(function (s) { return [s.id, s.name]; }));
-      var imp = [['castelo', d.castelo.name + ' (Castelo Ads)']].concat(d.scenarios.map(function (s) { return [s.id, s.name]; }));
-      return '<p class="hint" style="margin-bottom:14px">Premissas do cenário "Com Castelo Ads". O comparativo usa exatamente estes valores nas mesmas fórmulas do funil, sem multiplicadores fixos.</p>' +
+      var imp = [['castelo', d.castelo.name + (/TDE|Elite/i.test(d.castelo.name) ? '' : ' (TDE)')]].concat(d.scenarios.map(function (s) { return [s.id, s.name]; }));
+      return '<p class="hint" style="margin-bottom:14px">Premissas do cenário "Com TDE" (Método Tatuador de Elite). O comparativo usa exatamente estes valores nas mesmas fórmulas do funil, sem multiplicadores fixos.</p>' +
         '<div class="fgrid">' + F('castelo.name', 'Nome do cenário', 'text') + scenarioFields('castelo') + F('castelo.description', 'Descrição', 'textarea', { wide: true }) + '</div>' +
         '<div class="sec-t">Comparativo padrão</div><div class="fgrid">' +
         F('castelo.defaultBaseId', 'Cenário base padrão', 'select', { options: opts }) +
@@ -789,8 +788,8 @@
   }
 
   function exportConfig() {
-    var data = JSON.stringify({ app: 'castelo-ads-calculadora-roi', version: 1, exportedAt: new Date().toISOString(), config: E.normalizeConfig(draft || config) }, null, 2);
-    saveFile('castelo-ads-configuracoes.json', data, 'application/json');
+    var data = JSON.stringify({ app: 'tde-calculadora-roi', version: 1, exportedAt: new Date().toISOString(), config: E.normalizeConfig(draft || config) }, null, 2);
+    saveFile('tde-calculadora-configuracoes.json', data, 'application/json');
   }
   function importConfig(e) {
     var file = e.target.files && e.target.files[0]; if (!file) return;
@@ -846,7 +845,7 @@
     var m = model, f = m.funnel, fi = m.financial, c = m.compare, P = m.projection, T = P.totals;
     var name = sim.name.trim();
     var lines = [];
-    lines.push('*Projeção Castelo Ads' + (name ? ' · ' + name : '') + '*');
+    lines.push('*Projeção Tatuador de Elite' + (name ? ' · ' + name : '') + '*');
     lines.push('Investimento mensal em anúncios: ' + money(m.investment));
     lines.push('Ticket médio: ' + money(m.ticket));
     lines.push('Cenário: ' + m.scenario.name);
@@ -859,7 +858,7 @@
     lines.push('Faturamento: ' + money(fi.adRevenue) + ' · ROAS: ' + xr(fi.roas));
     lines.push((fi.roiSimplified ? 'ROI simplificado: ' : 'ROI estimado: ') + (fi.roi === null ? '—' : pct(fi.roi, 0)) + ' · ' + STATUS[fi.status]);
     lines.push('');
-    lines.push('*Com Castelo Ads (' + c.improvedScenario.name + ')*');
+    lines.push('*Com TDE (' + c.improvedScenario.name + ')*');
     lines.push(qty(c.improved.funnel.sales) + ' vendas/mês · ' + money(c.improved.fin.adRevenue) + ' · ROAS ' + xr(c.improved.fin.roas));
     lines.push('Diferença: ' + (c.extraSales > 0 ? '+' : '') + qty(c.extraSales) + ' vendas e ' + signedMoney(c.incrementalRevenue) + ' por mês');
     lines.push('');
@@ -897,7 +896,7 @@
       var doc = buildPdf(model, sim);
       var slug = (sim.name || 'prospect').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'prospect';
       var blob = doc.output('blob');
-      saveFile('proposta-castelo-ads-' + slug + '.pdf', blob, 'application/pdf').then(function () { btn.disabled = false; });
+      saveFile('proposta-tatuador-de-elite-' + slug + '.pdf', blob, 'application/pdf').then(function () { btn.disabled = false; });
     } catch (e) {
       btn.disabled = false; toast('Não foi possível gerar o PDF.'); if (window.console) console.error(e);
     }
@@ -906,7 +905,9 @@
   function buildPdf(m, s) {
     var J = window.jspdf.jsPDF;
     var doc = new J({ unit: 'mm', format: 'a4' });
-    var INK = [10, 20, 16], GREEN = [0, 200, 150], GDARK = [0, 135, 100], GRAY = [105, 122, 114], LINE = [222, 230, 226], TINT = [232, 248, 242], BLUE = [40, 120, 210], RED = [200, 70, 70];
+    var INK = [8, 8, 8], GOLD = [229, 179, 53], GDARK = [168, 125, 28], LEVER = [184, 138, 34], GRAY = [110, 110, 110], LINE = [226, 226, 226], TINT = [250, 246, 235], RED = [196, 72, 72];
+    var DARK = [8, 8, 8], CARD = [20, 20, 20], BORDER = [41, 41, 41], SOFT = [163, 163, 163];
+    var LOGO = $('brand-logo').src, LOGO_R = 1848 / 687;
     var name = (s.name || '').trim();
     var dateTxt = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date());
     var f = m.funnel, fi = m.financial, c = m.compare, P = m.projection, T = P.totals;
@@ -914,13 +915,14 @@
     function T_(x, y, str, o) { doc.text(pdfSafe(str), x, y, o || {}); }
     function font(style, size, color) { doc.setFont('helvetica', style); doc.setFontSize(size); doc.setTextColor.apply(doc, color || INK); }
     function header(title, sub) {
-      doc.setFillColor(8, 19, 15); doc.rect(0, 0, 210, 32, 'F');
-      doc.setFillColor.apply(doc, GREEN); doc.rect(0, 32, 210, 1.2, 'F');
-      font('bold', 9, GREEN); T_(15, 12, 'CASTELO ADS');
-      font('bold', 17, [255, 255, 255]); T_(15, 23, title);
-      if (sub) { font('normal', 9, [148, 169, 157]); T_(195, 23, sub, { align: 'right' }); }
+      doc.setFillColor.apply(doc, DARK); doc.rect(0, 0, 210, 32, 'F');
+      doc.setFillColor.apply(doc, GOLD); doc.rect(0, 32, 210, 0.8, 'F');
+      doc.addImage(LOGO, 'PNG', 15, 9, 14 * LOGO_R, 14);
+      doc.setDrawColor.apply(doc, BORDER); doc.setLineWidth(0.3); doc.line(58, 9, 58, 23);
+      font('bold', 15, [255, 255, 255]); T_(63, 16.5, title);
+      if (sub) { font('normal', 8.5, SOFT); T_(63, 22.5, sub); }
     }
-    function section(y, title) { font('bold', 11, INK); T_(15, y, title); doc.setDrawColor.apply(doc, GREEN); doc.setLineWidth(0.6); doc.line(15, y + 2, 30, y + 2); return y + 8; }
+    function section(y, title) { font('bold', 11, INK); T_(15, y, title); doc.setDrawColor.apply(doc, GOLD); doc.setLineWidth(0.6); doc.line(15, y + 2, 30, y + 2); return y + 8; }
     function box(x, y, w, h, label, value, sub, color) {
       doc.setFillColor.apply(doc, TINT); doc.setDrawColor.apply(doc, LINE); doc.setLineWidth(0.2); doc.roundedRect(x, y, w, h, 2, 2, 'FD');
       font('normal', 7.5, GRAY); T_(x + 4, y + 6, label);
@@ -929,7 +931,7 @@
     }
     function table(x, y, cols, rows, opt) {
       opt = opt || {}; var rh = opt.rh || 7, totalW = cols.reduce(function (a, cc) { return a + cc.w; }, 0);
-      doc.setFillColor(8, 19, 15); doc.rect(x, y, totalW, rh, 'F');
+      doc.setFillColor.apply(doc, DARK); doc.rect(x, y, totalW, rh, 'F');
       font('bold', 7.5, [255, 255, 255]);
       var cx = x; cols.forEach(function (cc) { T_(cc.align === 'left' ? cx + 2.5 : cx + cc.w - 2.5, y + rh - 2.3, cc.h, { align: cc.align === 'left' ? 'left' : 'right' }); cx += cc.w; });
       y += rh;
@@ -949,25 +951,23 @@
     }
 
     // ---- Página 1: apresentação
-    doc.setFillColor(8, 19, 15); doc.rect(0, 0, 210, 297, 'F');
-    doc.setFillColor.apply(doc, GREEN); doc.roundedRect(15, 22, 12, 12, 2.5, 2.5, 'F');
-    doc.setDrawColor(4, 38, 28); doc.setLineWidth(0.8);
-    doc.lines([[0, -5], [2, 0], [0, -2.2], [1.6, 0], [0, 2.2], [1.6, 0], [0, -2.2], [1.6, 0], [0, 2.2], [2, 0], [0, 5]], 15.8, 31.3, [1, 1], 'S');
-    font('bold', 11, GREEN); T_(31, 30, 'CASTELO ADS');
-    font('normal', 10, [148, 169, 157]); T_(15, 92, 'PROPOSTA COMERCIAL');
+    doc.setFillColor.apply(doc, DARK); doc.rect(0, 0, 210, 297, 'F');
+    doc.addImage(LOGO, 'PNG', 15, 22, 30 * LOGO_R, 30);
+    doc.setFillColor.apply(doc, GOLD); doc.rect(15, 84, 18, 0.8, 'F');
+    font('normal', 10, GOLD); T_(15, 92, 'PROPOSTA COMERCIAL');
     font('bold', 30, [255, 255, 255]);
     doc.text(doc.splitTextToSize('Projeção de Investimento e Resultados', 170), 15, 106, { lineHeightFactor: 1.15 });
     var y = 140;
-    if (name) { font('normal', 10, [148, 169, 157]); T_(15, y, 'Preparada para'); font('bold', 20, GREEN); T_(15, y + 10, name.slice(0, 60)); y += 26; }
+    if (name) { font('normal', 10, SOFT); T_(15, y, 'Preparada para'); font('bold', 20, GOLD); T_(15, y + 10, name.slice(0, 60)); y += 26; }
     var cover = [['Investimento mensal em anúncios', money(m.investment)], ['Ticket médio', money(m.ticket)], ['Cenário comercial atual', m.scenario.name], ['Período da projeção', P.months + ' meses']];
     if (m.mode === 'reverse' && m.reverse && m.reverse.feasible) cover[0][0] = 'Investimento necessário para a meta';
     cover.forEach(function (it, i) {
       var bx = 15 + (i % 2) * 92, by = y + Math.floor(i / 2) * 26;
-      doc.setDrawColor(38, 58, 48); doc.setFillColor(16, 29, 23); doc.setLineWidth(0.3); doc.roundedRect(bx, by, 88, 22, 2.5, 2.5, 'FD');
-      font('normal', 8, [148, 169, 157]); T_(bx + 5, by + 8, it[0]);
-      font('bold', 14, [255, 255, 255]); T_(bx + 5, by + 17, it[1]);
+      doc.setDrawColor.apply(doc, BORDER); doc.setFillColor.apply(doc, CARD); doc.setLineWidth(0.3); doc.roundedRect(bx, by, 88, 22, 2.5, 2.5, 'FD');
+      font('normal', 8, SOFT); T_(bx + 5, by + 8, it[0]);
+      font('bold', 14, i < 2 ? GOLD : [255, 255, 255]); T_(bx + 5, by + 17, it[1]);
     });
-    font('normal', 9, [148, 169, 157]); T_(15, 262, dateTxt);
+    font('normal', 9, SOFT); T_(15, 262, 'Tatuador de Elite · ' + dateTxt);
 
     // ---- Página 2: funil e resultados
     doc.addPage(); header('Funil e resultados', 'Cenário ' + m.scenario.name);
@@ -979,12 +979,12 @@
       ['Comparecimentos', qty(f.shows), 'Taxa de comparecimento ' + rateTxt(f.showRate)],
       ['Vendas', qty(f.sales), 'Taxa de fechamento ' + rateTxt(f.closeRate)]
     ];
-    var shades = [[8, 19, 15], [10, 60, 45], [0, 110, 82], [0, 160, 120], [0, 200, 150]];
+    var shades = [[8, 8, 8], [38, 31, 15], [92, 70, 22], [168, 125, 28], [229, 179, 53]];
     stages.forEach(function (st, i) {
       var w = 180 - i * 22, x = 105 - w / 2;
       doc.setFillColor.apply(doc, shades[i]); doc.roundedRect(x, y, w, 12, 2, 2, 'F');
       font('bold', 10.5, i === 4 ? INK : [255, 255, 255]); T_(105, y + 6.2, st[0] + ': ' + st[1], { align: 'center' });
-      font('normal', 7, i === 4 ? [4, 38, 28] : [190, 215, 205]); T_(105, y + 10, st[2], { align: 'center' });
+      font('normal', 7, i === 4 ? [60, 45, 10] : [205, 200, 190]); T_(105, y + 10, st[2], { align: 'center' });
       y += 14.5;
     });
     font('normal', 7.5, GRAY);
@@ -993,7 +993,7 @@
     var bw = 58, bh = 24;
     var boxes = [
       ['Faturamento bruto projetado', money(fi.adRevenue), qty(fi.adSales) + ' vendas x ' + money(fi.ticket), GDARK],
-      ['ROAS', xr(fi.roas), 'Faturamento / investimento em anúncios', BLUE],
+      ['ROAS', xr(fi.roas), 'Faturamento / investimento em anúncios', GDARK],
       [fi.roiSimplified ? 'ROI simplificado' : 'ROI estimado', fi.roi === null ? '-' : (fi.roi > 0 ? '+' : '') + pct(fi.roi, 0), fi.roiSimplified ? 'Sem custos variáveis informados' : 'Sobre custos fixos considerados', fi.roi !== null && fi.roi < 0 ? RED : GDARK],
       ['Resultado financeiro estimado', money(fi.result), 'Faturamento - custos considerados', fi.result < 0 ? RED : GDARK],
       ['Custo por venda', fi.costPerSale === null ? 'Sem vendas' : money(fi.costPerSale), 'Investimento / vendas dos anúncios'],
@@ -1017,10 +1017,10 @@
 
     // ---- Página 3: comparativo
     doc.addPage(); header('Comparativo de resultados', 'Mesmo investimento: ' + money(m.investment) + '/mês');
-    y = section(46, 'Sem Castelo Ads x Com Castelo Ads');
-    font('normal', 8.5, GRAY); T_(15, y, 'Base: ' + c.baseScenario.name + '   |   Com Castelo Ads: ' + c.improvedScenario.name); y += 5;
+    y = section(46, 'Sem TDE x Com TDE');
+    font('normal', 8.5, GRAY); T_(15, y, 'Base: ' + c.baseScenario.name + '   |   Com TDE: ' + c.improvedScenario.name); y += 5;
     function dd(a, b, fmt) { var d = b - a; return Math.abs(d) < 1e-9 ? '0' : (d > 0 ? '+' : '') + fmt(d); }
-    y = table(15, y, [{ h: 'Métrica', w: 54, align: 'left' }, { h: 'Sem Castelo Ads', w: 42 }, { h: 'Com Castelo Ads', w: 42 }, { h: 'Diferença', w: 42 }], [
+    y = table(15, y, [{ h: 'Métrica', w: 54, align: 'left' }, { h: 'Sem TDE', w: 42 }, { h: 'Com TDE', w: 42 }, { h: 'Diferença', w: 42 }], [
       ['CPL', money(c.base.funnel.cpl), money(c.improved.funnel.cpl), dd(c.base.funnel.cpl, c.improved.funnel.cpl, money)],
       ['Leads', qty(c.base.funnel.leads), qty(c.improved.funnel.leads), dd(c.base.funnel.leads, c.improved.funnel.leads, qty)],
       ['Agendamentos', qty(c.base.funnel.appointments), qty(c.improved.funnel.appointments), dd(c.base.funnel.appointments, c.improved.funnel.appointments, qty)],
@@ -1061,16 +1061,16 @@
     P.rows.forEach(function (r, i) {
       var bx = cx0 + gw * i + (gw - bw2) / 2;
       var h1 = chh * r.adRevenue / maxV, h2 = chh * r.leverRevenue / maxV;
-      doc.setFillColor.apply(doc, GREEN); if (h1 > 0) doc.rect(bx, cy0 + chh - h1, bw2, h1, 'F');
-      doc.setFillColor.apply(doc, BLUE); if (h2 > 0) doc.rect(bx, cy0 + chh - h1 - h2, bw2, h2, 'F');
+      doc.setFillColor.apply(doc, GOLD); if (h1 > 0) doc.rect(bx, cy0 + chh - h1, bw2, h1, 'F');
+      doc.setFillColor.apply(doc, LEVER); if (h2 > 0) doc.rect(bx, cy0 + chh - h1 - h2, bw2, h2, 'F');
       font('normal', 6.5, GRAY); T_(cx0 + gw * i + gw / 2, cy0 + chh + 4.5, 'M' + r.month, { align: 'center' });
     });
     y = cy0 + chh + 10;
-    doc.setFillColor.apply(doc, GREEN); doc.rect(cx0, y - 2.6, 3, 3, 'F'); font('normal', 7.5, GRAY); T_(cx0 + 5, y, 'Faturamento dos anúncios');
-    doc.setFillColor.apply(doc, BLUE); doc.rect(cx0 + 50, y - 2.6, 3, 3, 'F'); T_(cx0 + 55, y, 'Faturamento das alavancas adicionais');
+    doc.setFillColor.apply(doc, GOLD); doc.rect(cx0, y - 2.6, 3, 3, 'F'); font('normal', 7.5, GRAY); T_(cx0 + 5, y, 'Faturamento dos anúncios');
+    doc.setFillColor.apply(doc, LEVER); doc.rect(cx0 + 50, y - 2.6, 3, 3, 'F'); T_(cx0 + 55, y, 'Faturamento das alavancas adicionais');
     y += 6;
     [['Investimento acumulado', money(T.investment)], ['Faturamento dos anúncios', money(T.adRevenue)], ['Faturamento total combinado', money(T.totalRevenue)], ['ROAS acumulado', xr(T.roas)]]
-      .forEach(function (b, i) { box(15 + i * 45.5, y, 43.5, 20, b[0], b[1], '', i === 3 ? BLUE : GDARK); });
+      .forEach(function (b, i) { box(15 + i * 45.5, y, 43.5, 20, b[0], b[1], '', GDARK); });
     y += 26;
     var trows = P.rows.map(function (r) { return [String(r.month), money0(r.investment), qty(r.leads), qty(r.adSales), qty(r.leverSales), qty(r.totalSales), money0(r.totalRevenue), xr(r.roas)]; });
     trows.push(['Total', money0(T.investment), qty(T.leads), qty(T.adSales), qty(T.leverSales), qty(T.totalSales), money0(T.totalRevenue), xr(T.roas)]);
@@ -1118,8 +1118,8 @@
     for (var pg = 1; pg <= pages; pg++) {
       doc.setPage(pg);
       var dark = pg === 1;
-      doc.setDrawColor.apply(doc, dark ? [38, 58, 48] : LINE); doc.setLineWidth(0.2); doc.line(15, 282, 195, 282);
-      font('normal', 6.8, dark ? [148, 169, 157] : GRAY);
+      doc.setDrawColor.apply(doc, dark ? BORDER : LINE); doc.setLineWidth(0.2); doc.line(15, 282, 195, 282);
+      font('normal', 6.8, dark ? SOFT : GRAY);
       T_(15, 287, 'Valores são projeções ilustrativas baseadas em premissas configuráveis e não constituem garantia de resultado.');
       T_(195, 287, 'Página ' + pg + ' de ' + pages, { align: 'right' });
     }
