@@ -139,6 +139,7 @@
       mode: 'standard', reverseType: 'revenue', reverseTarget: 20000,
       scenarioId: c.defaults.scenarioId,
       leversEnabled: {},
+      leverTickets: {},
       includeAgencyFee: c.financial.includeAgencyFee,
       projection: clone(c.projection),
       chartMetric: 'revenue',
@@ -414,9 +415,15 @@
     var f = funnel(investment, op, refEff);
 
     var enabled = sim.leversEnabled || {};
-    var maxMat = config.levers.reduce(function (a, l) { return enabled[l.id] ? Math.max(a, Math.round(nonNeg(l.maturationMonths))) : a; }, 0);
+    // Valor por venda de cada alavanca: ajuste da simulação > ticket próprio configurado > ticket médio do prospect.
+    var lt = sim.leverTickets || {};
+    var levers = config.levers.map(function (l) {
+      var own = nonNeg(lt[l.id]), cfgT = nonNeg(l.ticket);
+      return Object.assign({}, l, { ticket: own > 0 ? own : (cfgT > 0 ? cfgT : ticket), ticketSource: own > 0 ? 'simulation' : (cfgT > 0 ? 'config' : 'main') });
+    });
+    var maxMat = levers.reduce(function (a, l) { return enabled[l.id] ? Math.max(a, Math.round(nonNeg(l.maturationMonths))) : a; }, 0);
     function leverAgg(month) {
-      var per = config.levers.map(function (l) { var r = leverMonth(l, !!enabled[l.id], month, ticket); r.id = l.id; return r; });
+      var per = levers.map(function (l) { var r = leverMonth(l, !!enabled[l.id], month, ticket); r.id = l.id; return r; });
       return {
         per: per, sales: per.reduce(function (a, r) { return a + r.sales; }, 0),
         revenue: round2(per.reduce(function (a, r) { return a + r.revenue; }, 0)),
@@ -430,7 +437,7 @@
 
     var cmp = compare({ investment: investment, ticket: ticket, base: indep, improved: op, efficiency: refEff, fin: fin });
 
-    var common = { investment: investment, ticket: ticket, projection: proj, levers: config.levers, fin: fin };
+    var common = { investment: investment, ticket: ticket, projection: proj, levers: levers, fin: fin };
     var projection = project(Object.assign({}, common, { op: op, leversEnabled: enabled }));
     var projBase = project(Object.assign({}, common, { op: indep, leversEnabled: {}, projection: Object.assign({}, proj, { rampEnabled: false, finalEfficiency: 1 }) }));
     var projImp = project(Object.assign({}, common, { op: op, leversEnabled: {} }));
@@ -439,7 +446,7 @@
       config: config, scenario: { id: scenario.id, name: scenario.name, description: scenario.description, closeRate: scenario.closeRate },
       op: op, independent: indep, issues: issues, ticket: ticket, currentInvestment: currentInv, investment: investment, mode: sim.mode,
       reverse: rev, funnel: f, financial: finAds,
-      levers: { now: finNow, mature: finMature, maturationMonth: maxMat + 1 },
+      levers: { now: finNow, mature: finMature, maturationMonth: maxMat + 1, list: levers },
       compare: cmp, projection: projection, compareProjection: { base: projBase, improved: projImp },
       projectionSettings: proj, fin: fin
     };

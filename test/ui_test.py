@@ -118,6 +118,13 @@ with sync_playwright() as pw:
     p.click('#sw-lev-prospeccao'); p.click('#sw-lev-social'); p.click('#sw-lev-indicacoes'); m = model(p)
     check(m['projection']['totals'] == base, 'desativar alavancas reverte')
     p.click('#sw-lev-social'); p.click('#sw-lev-indicacoes')
+    check(p.input_value('#lt-social') == '1.450,00' and 'Igual ao ticket médio' in p.inner_text('#levers'), 'alavanca puxa o ticket médio')
+    typ(p, '#in-ticket', '1800'); check(p.input_value('#lt-social') == '1.800,00', 'alavanca acompanha o novo ticket')
+    typ(p, '#lt-social', '900'); m = model(p)
+    check(m['levers']['list'][1]['ticket'] == 900 and m['projection']['totals']['levers'][1]['revenue'] == 3 * 900 and p.input_value('#lt-social') == '900', 'valor por venda editável sem perder a digitação')
+    p.click('[data-lever-ticket-reset="social"]'); m = model(p)
+    check(m['levers']['list'][1]['ticket'] == 1800, 'voltar a usar o ticket médio')
+    typ(p, '#in-ticket', '1450'); p.locator('#in-ticket').blur()
 
     # projeção
     p.click('[data-months="12"]'); m = model(p); check(len(m['projection']['rows']) == 12, '12 meses')

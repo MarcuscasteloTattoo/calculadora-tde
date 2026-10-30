@@ -196,3 +196,12 @@ test('migração: configuração antiga mantém alavancas e custos, adota parâm
   assert.equal(n.version, 2); assert.equal(n.defaults.ticket, 1450); assert.equal(n.scenarios[0].closeRate, 0.2);
   assert.equal(n.financial.agencyFee, 900); assert.equal(n.levers[1].salesPerMonth, 2);
 });
+
+test('alavancas usam o ticket médio do prospect por padrão e aceitam valor próprio', () => {
+  const a = run({ ticket: 2000, leversEnabled: { social: true } });
+  assert.ok(a.levers.list.every(l => l.ticket === 2000 && l.ticketSource === 'main'));
+  close(a.projection.totals.leverRevenue, 3 * 2000);
+  const b = run({ ticket: 2000, leversEnabled: { social: true }, leverTickets: { social: 900 } });
+  assert.equal(b.levers.list[1].ticket, 900); assert.equal(b.levers.list[0].ticket, 2000);
+  close(b.projection.totals.leverRevenue, 3 * 900);
+});

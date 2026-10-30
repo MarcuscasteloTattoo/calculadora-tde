@@ -237,7 +237,25 @@
     $('sw-growth').addEventListener('click', function () { sim.projection.growthEnabled = !sim.projection.growthEnabled; recompute(); });
     $('sw-ramp').addEventListener('click', function () { sim.projection.rampEnabled = !sim.projection.rampEnabled; recompute(); });
     $('seg-metric').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; sim.chartMetric = b.getAttribute('data-metric'); recompute(); });
+    $('levers').addEventListener('input', function (e) {
+      var el = e.target; if (!el.hasAttribute('data-lever-ticket')) return;
+      var id = el.getAttribute('data-lever-ticket');
+      if (!sim.leverTickets) sim.leverTickets = {};
+      if (el.value.trim() === '') { delete sim.leverTickets[id]; el.classList.remove('bad'); recompute(); return; }
+      var r = validate('money', el.value);
+      el.classList.toggle('bad', !!r.error);
+      if (r.error) return;
+      if (r.value > 0) sim.leverTickets[id] = r.value; else delete sim.leverTickets[id];
+      recompute();
+    });
+    $('levers').addEventListener('focusin', function (e) { var el = e.target; if (el.hasAttribute && el.hasAttribute('data-lever-ticket')) setTimeout(function () { try { el.select(); } catch (x) {} }, 0); });
+    $('levers').addEventListener('focusout', function (e) {
+      var el = e.target; if (!el.hasAttribute || !el.hasAttribute('data-lever-ticket')) return;
+      setTimeout(function () { el.classList.remove('bad'); renderLevers(); }, 0);
+    });
     $('levers').addEventListener('click', function (e) {
+      var rs = e.target.closest('[data-lever-ticket-reset]');
+      if (rs) { var rid = rs.getAttribute('data-lever-ticket-reset'); if (sim.leverTickets && sim.leverTickets[rid]) delete sim.leverTickets[rid]; else openSettings('alavancas'); recompute(); return; }
       var sw = e.target.closest('[data-lever]');
       if (sw) { var id = sw.getAttribute('data-lever'); sim.leversEnabled[id] = !sim.leversEnabled[id]; recompute(); return; }
       if (e.target.closest('[data-lever-cfg]')) openSettings('alavancas');
@@ -547,6 +565,25 @@
   }
 
   var LEVER_ICONS = { prospeccao: 'send', social: 'share', indicacoes: 'users' };
+  function leverRule(l, mat) {
+    return '+' + qty(l.salesPerMonth) + ' ' + plural(l.salesPerMonth, 'venda', 'vendas') + '/mês ' + (mat > 0 ? 'após ' + mat + ' ' + plural(mat, 'mês', 'meses') + ' de maturação' : 'desde o primeiro mês') +
+      (l.monthlyCost > 0 ? ' · custo ' + money0(l.monthlyCost) + '/mês' : '');
+  }
+  function leverTicketSource(l) {
+    if (l.ticketSource === 'main') return 'Igual ao ticket médio';
+    return (l.ticketSource === 'simulation' ? 'Valor próprio' : 'Valor das configurações') + ' · <button type="button" class="linkbtn" data-lever-ticket-reset="' + esc(l.id) + '">usar ticket médio</button>';
+  }
+  function leverContrib(l, on, mat) {
+    if (!on) return '';
+    var months = model.projection.months;
+    var tot = model.projection.totals.levers.filter(function (x) { return x.id === l.id; })[0] || { sales: 0, revenue: 0, cost: 0 };
+    return '<div class="contrib">' +
+      '<span class="chip">Mês 1: <b>' + (mat > 0 ? 'sem vendas (maturação)' : '+' + qty(l.salesPerMonth)) + '</b></span>' +
+      '<span class="chip">' + (mat > 0 ? 'A partir do mês ' + (mat + 1) : 'Por mês') + ': <b>+' + qty(l.salesPerMonth) + ' · ' + money0(l.salesPerMonth * l.ticket) + '</b></span>' +
+      '<span class="chip">Em ' + months + ' meses: <b>' + qty(tot.sales) + ' ' + plural(tot.sales, 'venda', 'vendas') + ' · ' + money0(tot.revenue) + '</b></span>' +
+      (tot.cost > 0 ? '<span class="chip">Custo no período: <b>' + money0(tot.cost) + '</b></span>' : '') +
+      (mat >= months ? '<span class="chip" style="color:var(--fg);border-color:var(--muted)">Maturação maior que o período da projeção</span>' : '') + '</div>';
+  }
   function renderLevers() {
     var c = cfg(), P = model.projection, f = model.funnel, fi = model.financial, months = P.months;
     var html = '<div class="lever on"><div class="ic">' + icon('trend') + '</div><div style="min-width:0"><h4>Alavanca 01 · Tráfego Pago</h4><div class="rule">Base do funil principal</div>' +
@@ -554,26 +591,30 @@
       '<span class="chip">Mês de referência: <b>' + qty(f.sales) + ' ' + plural(f.sales, 'venda', 'vendas') + ' · ' + money0(fi.adRevenue) + '</b></span>' +
       '<span class="chip">Em ' + months + ' meses: <b>' + qty(P.totals.adSales) + ' vendas · ' + money0(P.totals.adRevenue) + '</b></span></div></div>' +
       '<div class="lever-right"><span class="badge">Sempre ativa</span></div></div>';
-    c.levers.forEach(function (l, idx) {
+    var focusedTicket = document.activeElement && document.activeElement.hasAttribute && document.activeElement.hasAttribute('data-lever-ticket');
+    model.levers.list.forEach(function (l, idx) {
       var on = !!sim.leversEnabled[l.id];
-      var tot = P.totals.levers.filter(function (x) { return x.id === l.id; })[0] || { sales: 0, revenue: 0, cost: 0 };
       var mat = Math.round(l.maturationMonths);
-      var rule = '+' + qty(l.salesPerMonth) + ' ' + plural(l.salesPerMonth, 'venda', 'vendas') + '/mês ' + (mat > 0 ? 'após ' + mat + ' ' + plural(mat, 'mês', 'meses') + ' de maturação' : 'desde o primeiro mês') +
-        (l.ticket > 0 ? ' · ticket ' + money0(l.ticket) : '') + (l.monthlyCost > 0 ? ' · custo ' + money0(l.monthlyCost) + '/mês' : '');
-      var tk = l.ticket > 0 ? l.ticket : model.ticket;
-      var contrib = on ? '<div class="contrib">' +
-        '<span class="chip">Mês 1: <b>' + (mat > 0 ? 'sem vendas (maturação)' : '+' + qty(l.salesPerMonth)) + '</b></span>' +
-        '<span class="chip">' + (mat > 0 ? 'A partir do mês ' + (mat + 1) : 'Por mês') + ': <b>+' + qty(l.salesPerMonth) + ' · ' + money0(l.salesPerMonth * tk) + '</b></span>' +
-        '<span class="chip">Em ' + months + ' meses: <b>' + qty(tot.sales) + ' ' + plural(tot.sales, 'venda', 'vendas') + ' · ' + money0(tot.revenue) + '</b></span>' +
-        (tot.cost > 0 ? '<span class="chip">Custo no período: <b>' + money0(tot.cost) + '</b></span>' : '') +
-        (mat >= months ? '<span class="chip" style="color:var(--fg);border-color:var(--muted)">Maturação maior que o período da projeção</span>' : '') +
-        '</div>' : '';
-      html += '<div class="lever' + (on ? ' on' : '') + '"><div class="ic">' + icon(LEVER_ICONS[l.id] || 'trend') + '</div><div style="min-width:0"><h4>Alavanca 0' + (idx + 2) + ' · ' + esc(l.name) + '</h4>' +
-        '<div class="rule">' + rule + '</div><div class="desc">' + esc(l.description) + '</div>' + contrib + '</div>' +
+      html += '<div class="lever' + (on ? ' on' : '') + '" data-lever-card="' + esc(l.id) + '"><div class="ic">' + icon(LEVER_ICONS[l.id] || 'trend') + '</div><div style="min-width:0"><h4>Alavanca 0' + (idx + 2) + ' · ' + esc(l.name) + '</h4>' +
+        '<div class="rule" data-lever-rule="' + esc(l.id) + '">' + leverRule(l, mat) + '</div><div class="desc">' + esc(l.description) + '</div>' +
+        '<div class="lever-ticket"><label for="lt-' + esc(l.id) + '">Valor por venda</label><div class="prefix"><span>R$</span><input class="inp num" type="text" inputmode="decimal" autocomplete="off" id="lt-' + esc(l.id) + '" data-lever-ticket="' + esc(l.id) + '" value="' + fmtInput('money', l.ticket) + '"></div>' +
+        '<span class="lt-src" data-lever-src="' + esc(l.id) + '">' + leverTicketSource(l) + '</span></div>' +
+        '<div data-lever-contrib="' + esc(l.id) + '">' + leverContrib(l, on, mat) + '</div></div>' +
         '<div class="lever-right"><button class="close-x" type="button" data-lever-cfg="' + esc(l.id) + '" title="Editar alavanca" aria-label="Editar ' + esc(l.name) + '">' + icon('gear', 17) + '</button>' +
         '<button class="switch" type="button" role="switch" id="sw-lev-' + esc(l.id) + '" data-lever="' + esc(l.id) + '" aria-checked="' + on + '" aria-label="Ativar ' + esc(l.name) + '"><span class="track"></span></button></div></div>';
     });
-    setHTML($('levers'), html);
+    if (focusedTicket && $('levers')._ids === model.levers.list.map(function (l) { return l.id + sim.leversEnabled[l.id]; }).join()) {
+      // não recriar o campo em edição: atualiza só textos e contribuições
+      model.levers.list.forEach(function (l) {
+        var mat = Math.round(l.maturationMonths);
+        document.querySelector('[data-lever-rule="' + l.id + '"]').innerHTML = leverRule(l, mat);
+        document.querySelector('[data-lever-src="' + l.id + '"]').innerHTML = leverTicketSource(l);
+        document.querySelector('[data-lever-contrib="' + l.id + '"]').innerHTML = leverContrib(l, !!sim.leversEnabled[l.id], mat);
+        var inp = $('lt-' + l.id); if (inp !== document.activeElement) inp.value = fmtInput('money', l.ticket);
+      });
+      html = null;
+    }
+    if (html !== null) { setHTML($('levers'), html); $('levers')._ids = model.levers.list.map(function (l) { return l.id + sim.leversEnabled[l.id]; }).join(); }
 
     var L = model.levers, T = P.totals;
     function line(label, value, color) { return '<div class="kv"><span>' + label + '</span><b' + (color ? ' style="color:' + color + '"' : '') + '>' + value + '</b></div>'; }
@@ -714,12 +755,12 @@
         F('projection.finalEfficiency', 'Eficiência final do fechamento', 'pct', { max: 200, tip: 'Também usada no funil do mês de referência. 100% = taxa do cenário sem ajuste.' }) + '</div>';
     }
     if (tab === 'alavancas') {
-      return '<p class="hint" style="margin-bottom:14px">Cada alavanca soma vendas próprias depois da maturação (3 meses = primeira venda no mês 4) e nunca entra no ROAS dos anúncios. Ticket zerado usa o ticket do prospect.</p>' +
+      return '<p class="hint" style="margin-bottom:14px">Cada alavanca soma vendas próprias depois da maturação (3 meses = primeira venda no mês 4) e nunca entra no ROAS dos anúncios. Por padrão, cada venda vale o ticket médio do prospect; o valor pode ser alterado no próprio card da alavanca.</p>' +
         d.levers.map(function (l, i) {
           var p = 'levers.' + i;
           return '<div class="sc-card"><div class="row-between"><h3>Alavanca 0' + (i + 2) + ' · ' + esc(l.name) + '</h3></div><div class="fgrid">' +
             F(p + '.name', 'Nome', 'text') + F(p + '.salesPerMonth', 'Vendas extras por mês', 'num') +
-            F(p + '.maturationMonths', 'Maturação (meses)', 'int', { max: 24 }) + F(p + '.ticket', 'Ticket próprio (opcional)', 'money') +
+            F(p + '.maturationMonths', 'Maturação (meses)', 'int', { max: 24 }) + F(p + '.ticket', 'Valor por venda padrão', 'money', { hint: 'Zerado = usa o ticket médio do prospect.' }) +
             F(p + '.monthlyCost', 'Custo adicional mensal', 'money') + F(p + '.description', 'Descrição', 'textarea', { wide: true }) + '</div></div>';
         }).join('');
     }
@@ -1150,9 +1191,9 @@
     doc.addPage(); header('Estratégias adicionais', 'Alavancas comerciais e premissas');
     y = section(46, 'Contribuição de cada alavanca em ' + P.months + ' meses');
     var lrows = [['01 · Tráfego Pago', 'Ativa', 'Funil principal', qty(T.adSales), money0(T.adRevenue), money0(T.investment)]];
-    m.config.levers.forEach(function (l, i) {
+    m.levers.list.forEach(function (l, i) {
       var tt = T.levers[i];
-      lrows.push(['0' + (i + 2) + ' · ' + l.name, tt.enabled ? 'Ativa' : 'Inativa', '+' + qty(l.salesPerMonth) + '/mês após ' + Math.round(l.maturationMonths) + ' m',
+      lrows.push(['0' + (i + 2) + ' · ' + l.name, tt.enabled ? 'Ativa' : 'Inativa', '+' + qty(l.salesPerMonth) + ' x ' + money0(l.ticket) + ' após ' + Math.round(l.maturationMonths) + ' m',
         tt.enabled ? qty(tt.sales) : '-', tt.enabled ? money0(tt.revenue) : '-', tt.enabled ? money0(tt.cost) : '-']);
     });
     y = table(15, y, [{ h: 'Alavanca', w: 46, align: 'left' }, { h: 'Status', w: 18 }, { h: 'Regra', w: 40 }, { h: 'Vendas', w: 20 }, { h: 'Faturamento', w: 30 }, { h: 'Custo', w: 26 }], lrows, { rh: 7.5 });
