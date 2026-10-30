@@ -1223,7 +1223,8 @@ td.dim { color: var(--dim); }
     if (isFinite(d) && Math.abs(d) > 1e-9) {
       var good = higherIsBetter ? d > 0 : d < 0;
       cls = good ? '' : ' neg';
-      dTxt = '<span class="delta' + cls + '">(' + (d > 0 ? '+' : '') + fmt(d) + ')</span>';
+      var pc = a > 0 ? ' · ' + (d > 0 ? '+' : '') + pct(d / a * 100, 0) : '';
+      dTxt = '<span class="delta' + cls + '">(' + (d > 0 ? '+' : '') + fmt(d) + pc + ')</span>';
     }
     return [label, fmt(a), fmt(b) + dTxt];
   }
@@ -1240,14 +1241,15 @@ td.dim { color: var(--dim); }
     function panel(cls, title, ic, sc, side, roas) {
       return '<div class="panel ' + cls + '"><h3>' + icon(ic, 16) + title + '</h3><p class="ps">' + esc(sc.name) + ' · investimento de ' + money(model.investment) + '/mês</p><dl>' +
         rows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + r[side] + '</dd>'; }).join('') +
-        '<dt>ROAS</dt><dd>' + xr(roas) + '</dd></dl></div>';
+        '<dt>ROAS</dt><dd>' + xr(roas) + (side === 2 && c.roasMultiple !== null && Math.abs(c.roasMultiple - 1) > 1e-9 ? '<span class="delta' + (c.roasMultiple < 1 ? ' neg' : '') + '">(' + nf(1, 1).format(c.roasMultiple) + 'x mais)</span>' : '') + '</dd></dl></div>';
     }
     $('cmp').innerHTML = panel('sem', 'Sem TDE', 'x', c.baseScenario, 1, B.fin.roas) + panel('com', 'Com TDE', 'check', c.improvedScenario, 2, I.fin.roas);
     $('cmp-kpis').innerHTML =
       kpi('Vendas adicionais', (c.extraSales > 0 ? '+' : '') + qty(c.extraSales), 'por mês', c.extraSales >= 0 ? 'pos' : 'neg') +
       kpi('Faturamento incremental', signedMoney(c.incrementalRevenue), 'por mês', c.incrementalRevenue >= 0 ? 'pos' : 'neg') +
       kpi('Redução no CPL', money(c.cplReduction), c.cplReductionPct === null ? '—' : pct(c.cplReductionPct, 1) + ' mais barato por lead', c.cplReduction >= 0 ? 'pos' : 'neg') +
-      kpi('Variação do ROAS', c.roasDelta === null ? '—' : (c.roasDelta > 0 ? '+' : '') + nf(1, 1).format(c.roasDelta) + 'x', 'De ' + xr(B.fin.roas) + ' para ' + xr(I.fin.roas), c.roasDelta === null ? '' : (c.roasDelta >= 0 ? 'pos' : 'neg'));
+      kpi('Eficiência (variação do ROAS)', c.roasMultiple === null ? (c.roasDelta === null ? '—' : (c.roasDelta > 0 ? '+' : '') + nf(1, 1).format(c.roasDelta) + 'x') : nf(1, 1).format(c.roasMultiple) + 'x mais ROAS',
+        'De ' + xr(B.fin.roas) + ' para ' + xr(I.fin.roas) + (c.roasDelta === null ? '' : ' (' + (c.roasDelta > 0 ? '+' : '') + nf(1, 1).format(c.roasDelta) + 'x)'), c.roasDelta === null ? '' : (c.roasDelta >= 0 ? 'pos' : 'neg'));
   }
 
   function renderProjectionControls() {
@@ -1844,7 +1846,7 @@ td.dim { color: var(--dim); }
     doc.addPage(); header('Comparativo de resultados', 'Mesmo investimento: ' + money(m.investment) + '/mês');
     y = section(46, 'Sem TDE x Com TDE');
     font('normal', 8.5, GRAY); T_(15, y, 'Base: ' + c.baseScenario.name + '   |   Com TDE: ' + c.improvedScenario.name); y += 5;
-    function dd(a, b, fmt) { var d = b - a; return Math.abs(d) < 1e-9 ? '0' : (d > 0 ? '+' : '') + fmt(d); }
+    function dd(a, b, fmt) { var d = b - a; return Math.abs(d) < 1e-9 ? '0' : (d > 0 ? '+' : '') + fmt(d) + (a > 0 ? ' (' + (d > 0 ? '+' : '') + pct(d / a * 100, 0) + ')' : ''); }
     y = table(15, y, [{ h: 'Métrica', w: 54, align: 'left' }, { h: 'Sem TDE', w: 42 }, { h: 'Com TDE', w: 42 }, { h: 'Diferença', w: 42 }], [
       ['CPL', money(c.base.funnel.cpl), money(c.improved.funnel.cpl), dd(c.base.funnel.cpl, c.improved.funnel.cpl, money)],
       ['Leads', qty(c.base.funnel.leads), qty(c.improved.funnel.leads), dd(c.base.funnel.leads, c.improved.funnel.leads, qty)],
@@ -1859,7 +1861,7 @@ td.dim { color: var(--dim); }
       ['Vendas adicionais', (c.extraSales > 0 ? '+' : '') + qty(c.extraSales), 'por mês'],
       ['Faturamento incremental', signedMoney(c.incrementalRevenue), 'por mês'],
       ['Redução no CPL', money(c.cplReduction), c.cplReductionPct === null ? '' : pct(c.cplReductionPct, 1) + ' por lead'],
-      ['Variação do ROAS', c.roasDelta === null ? '-' : (c.roasDelta > 0 ? '+' : '') + nf(1, 1).format(c.roasDelta) + 'x', 'De ' + xr(c.base.fin.roas) + ' para ' + xr(c.improved.fin.roas)]
+      ['Eficiência (variação do ROAS)', c.roasMultiple === null ? '-' : nf(1, 1).format(c.roasMultiple) + 'x mais ROAS', 'De ' + xr(c.base.fin.roas) + ' para ' + xr(c.improved.fin.roas)]
     ];
     cb.forEach(function (b, i) { box(15 + (i % 2) * 91, y + Math.floor(i / 2) * 27, 89, 24, b[0], b[1], b[2], GDARK); });
     y += 60;
