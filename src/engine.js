@@ -437,6 +437,21 @@
 
     var cmp = compare({ investment: investment, ticket: ticket, base: indep, improved: op, efficiency: refEff, fin: fin });
 
+    // Totais mensais com as alavancas ativas (regime, após a maturação). Os campos de anúncios continuam separados.
+    var TOT = {
+      active: matureL.sales > 0, month: maxMat + 1,
+      adSales: f.sales, leverSales: matureL.sales, sales: f.sales + matureL.sales,
+      adRevenue: finAds.adRevenue, leverRevenue: matureL.revenue, revenue: round2(finAds.adRevenue + matureL.revenue),
+      leverCosts: matureL.cost, totalReturn: div(round2(finAds.adRevenue + matureL.revenue), investment + matureL.cost)
+    };
+    cmp.withLevers = {
+      improvedSales: cmp.improved.funnel.sales + matureL.sales,
+      improvedRevenue: round2(cmp.improved.fin.adRevenue + matureL.revenue),
+      improvedReturn: div(round2(cmp.improved.fin.adRevenue + matureL.revenue), investment + matureL.cost),
+      extraSales: cmp.improved.funnel.sales + matureL.sales - cmp.base.funnel.sales,
+      incrementalRevenue: round2(cmp.improved.fin.adRevenue + matureL.revenue - cmp.base.fin.adRevenue)
+    };
+
     var common = { investment: investment, ticket: ticket, projection: proj, levers: levers, fin: fin };
     var projection = project(Object.assign({}, common, { op: op, leversEnabled: enabled }));
     var projBase = project(Object.assign({}, common, { op: indep, leversEnabled: {}, projection: Object.assign({}, proj, { rampEnabled: false, finalEfficiency: 1 }) }));
@@ -445,7 +460,7 @@
     return {
       config: config, scenario: { id: scenario.id, name: scenario.name, description: scenario.description, closeRate: scenario.closeRate },
       op: op, independent: indep, issues: issues, ticket: ticket, currentInvestment: currentInv, investment: investment, mode: sim.mode,
-      reverse: rev, funnel: f, financial: finAds,
+      reverse: rev, funnel: f, financial: finAds, total: TOT,
       levers: { now: finNow, mature: finMature, maturationMonth: maxMat + 1, list: levers },
       compare: cmp, projection: projection, compareProjection: { base: projBase, improved: projImp },
       projectionSettings: proj, fin: fin

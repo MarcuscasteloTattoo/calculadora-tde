@@ -205,3 +205,14 @@ test('alavancas usam o ticket médio do prospect por padrão e aceitam valor pr�
   assert.equal(b.levers.list[1].ticket, 900); assert.equal(b.levers.list[0].ticket, 2000);
   close(b.projection.totals.leverRevenue, 3 * 900);
 });
+
+test('totais com alavancas: topo e comparativo somam as alavancas maduras; anúncios ficam separados', () => {
+  const m = run({ leversEnabled: { social: true, indicacoes: true } });
+  assert.equal(m.total.revenue, 20300 + 2 * 1450); assert.equal(m.total.sales, 16); assert.equal(m.total.month, 4);
+  assert.equal(m.financial.adRevenue, 20300); close(m.financial.roas, 20300 / 1500);
+  close(m.total.totalReturn, 23200 / 1500);
+  assert.equal(m.compare.withLevers.improvedRevenue, 23200); assert.equal(m.compare.withLevers.incrementalRevenue, 23200 - 4350);
+  assert.equal(m.compare.withLevers.extraSales, 13);
+  const off = run();
+  assert.equal(off.total.active, false); assert.equal(off.total.revenue, 20300); assert.equal(off.compare.withLevers.incrementalRevenue, 15950);
+});

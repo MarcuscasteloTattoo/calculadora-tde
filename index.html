@@ -1021,6 +1021,21 @@ td.dim { color: var(--dim); }
 
     var cmp = compare({ investment: investment, ticket: ticket, base: indep, improved: op, efficiency: refEff, fin: fin });
 
+    // Totais mensais com as alavancas ativas (regime, após a maturação). Os campos de anúncios continuam separados.
+    var TOT = {
+      active: matureL.sales > 0, month: maxMat + 1,
+      adSales: f.sales, leverSales: matureL.sales, sales: f.sales + matureL.sales,
+      adRevenue: finAds.adRevenue, leverRevenue: matureL.revenue, revenue: round2(finAds.adRevenue + matureL.revenue),
+      leverCosts: matureL.cost, totalReturn: div(round2(finAds.adRevenue + matureL.revenue), investment + matureL.cost)
+    };
+    cmp.withLevers = {
+      improvedSales: cmp.improved.funnel.sales + matureL.sales,
+      improvedRevenue: round2(cmp.improved.fin.adRevenue + matureL.revenue),
+      improvedReturn: div(round2(cmp.improved.fin.adRevenue + matureL.revenue), investment + matureL.cost),
+      extraSales: cmp.improved.funnel.sales + matureL.sales - cmp.base.funnel.sales,
+      incrementalRevenue: round2(cmp.improved.fin.adRevenue + matureL.revenue - cmp.base.fin.adRevenue)
+    };
+
     var common = { investment: investment, ticket: ticket, projection: proj, levers: levers, fin: fin };
     var projection = project(Object.assign({}, common, { op: op, leversEnabled: enabled }));
     var projBase = project(Object.assign({}, common, { op: indep, leversEnabled: {}, projection: Object.assign({}, proj, { rampEnabled: false, finalEfficiency: 1 }) }));
@@ -1029,7 +1044,7 @@ td.dim { color: var(--dim); }
     return {
       config: config, scenario: { id: scenario.id, name: scenario.name, description: scenario.description, closeRate: scenario.closeRate },
       op: op, independent: indep, issues: issues, ticket: ticket, currentInvestment: currentInv, investment: investment, mode: sim.mode,
-      reverse: rev, funnel: f, financial: finAds,
+      reverse: rev, funnel: f, financial: finAds, total: TOT,
       levers: { now: finNow, mature: finMature, maturationMonth: maxMat + 1, list: levers },
       compare: cmp, projection: projection, compareProjection: { base: projBase, improved: projImp },
       projectionSettings: proj, fin: fin
@@ -1425,8 +1440,7 @@ td.dim { color: var(--dim); }
       conn('× <b>' + rateTxt(f.closeRate) + '</b> fechamento do cenário ' + esc(model.scenario.name) + effNote) +
       stage('check', 'Vendas realizadas', qty(f.sales), 'Conversão geral de ' + rateTxt(f.conversionRate) + ' dos leads', f.sales / base * 100) +
       conn('× ticket médio de <b>' + money(model.ticket) + '</b>') +
-      stage('dollar', 'Faturamento projetado', money(model.financial.adRevenue), qty(f.sales) + ' ' + plural(f.sales, 'venda', 'vendas') + ' × ' + money(model.ticket), null, true);
-    $('funnel').insertAdjacentHTML('beforeend', leverPlusHTML('hero-plus funnel-plus')); hydrateIcons($('funnel'));
+      stage('dollar', 'Faturamento projetado', money(model.total.revenue), model.total.active ? leverBreak(model.financial.adRevenue, f.sales) : qty(f.sales) + ' ' + plural(f.sales, 'venda', 'vendas') + ' × ' + money(model.ticket), null, true);
     $('policy-note').textContent = 'Cálculo com valores esperados; os inteiros exibidos são arredondados apenas no final. Faturamento = vendas inteiras × ticket médio.' +
       (cfg().acquisition.extraConversationsEnabled ? ' As conversas da captação são tratadas como contatos distintos dos leads das campanhas de contatos (sem deduplicação comprovada).' : '');
     if (!f.valid) $('policy-note').textContent = 'O CPL está zerado. Ajuste em Configurações para gerar leads.';
@@ -1438,8 +1452,9 @@ td.dim { color: var(--dim); }
     var fi = model.financial, f = model.funnel;
     var be = fi.breakEvenSales;
     $('kpis').innerHTML =
-      kpi('Faturamento bruto projetado', money(fi.adRevenue), qty(fi.adSales) + ' ' + plural(fi.adSales, 'venda', 'vendas') + ' × ' + money(fi.ticket), 'pos') +
-      kpi('ROAS hipotético', xr(fi.roas), leverPlus() ? 'Só anúncios · retorno total com alavancas ' + xr(leverPlus().ret) : 'Faturamento ÷ investimento em anúncios', 'pos', 'Retorno bruto sobre a mídia. ROAS não é lucro.') +
+      kpi('Faturamento bruto projetado', money(model.total.revenue), model.total.active ? leverBreak(fi.adRevenue, fi.adSales) : qty(fi.adSales) + ' ' + plural(fi.adSales, 'venda', 'vendas') + ' × ' + money(fi.ticket), 'pos') +
+      (model.total.active ? kpi('ROAS total (com alavancas)', xr(model.total.totalReturn), 'Somente anúncios: ' + xr(fi.roas), 'pos', 'Faturamento total ÷ (investimento em anúncios + custos das alavancas). ROAS não é lucro.')
+        : kpi('ROAS hipotético', xr(fi.roas), 'Faturamento ÷ investimento em anúncios', 'pos', 'Retorno bruto sobre a mídia. ROAS não é lucro.')) +
       kpi('Custo por venda', fi.costPerSale === null ? 'Sem vendas' : money(fi.costPerSale), 'Investimento ÷ vendas dos anúncios') +
       kpi('Custo por lead (CPL)', money(f.costPerLead), 'Referência das campanhas de contatos') +
       kpi('CPL qualificado das campanhas', money(f.contactQualifiedCost), 'Verba de contatos ÷ qualificados dessas campanhas', '', 'Considera só a verba e os leads das campanhas de contatos.') +
@@ -1475,15 +1490,15 @@ td.dim { color: var(--dim); }
     return '<span class="delta' + (good ? '' : ' neg') + '">(' + (d > 0 ? '+' : '') + fmt(d) + pc + ')</span>';
   }
   function renderCompare() {
-    var c = model.compare, B = c.base, I = c.improved;
+    var c = model.compare, B = c.base, I = c.improved, W = c.withLevers;
     var rows = [
       ['Investimento', money(B.funnel.investment), money(I.funnel.investment)],
       ['CPL dos contatos', money(B.funnel.cpl), money(I.funnel.cpl) + deltaSpan(B.funnel.cpl, I.funnel.cpl, money, false)],
       ['Leads recebidos', qty(B.funnel.leads), qty(I.funnel.leads) + deltaSpan(B.funnel.leads, I.funnel.leads, qty, true)],
       ['Leads qualificados', qty(B.funnel.qualified), qty(I.funnel.qualified) + deltaSpan(B.funnel.qualified, I.funnel.qualified, qty, true)],
-      ['Vendas', qty(B.funnel.sales), qty(I.funnel.sales) + deltaSpan(B.funnel.sales, I.funnel.sales, qty, true)],
-      ['Faturamento estimado', money(B.fin.adRevenue), money(I.fin.adRevenue) + deltaSpan(B.fin.adRevenue, I.fin.adRevenue, money, true)],
-      ['ROAS projetado', xr(B.fin.roas), xr(I.fin.roas)]
+      ['Vendas', qty(B.funnel.sales), qty(W.improvedSales) + deltaSpan(B.funnel.sales, W.improvedSales, qty, true)],
+      ['Faturamento estimado', money(B.fin.adRevenue), money(W.improvedRevenue) + deltaSpan(B.fin.adRevenue, W.improvedRevenue, money, true)],
+      [model.total.active ? 'ROAS total' : 'ROAS projetado', xr(B.fin.roas), xr(W.improvedReturn)]
     ];
     function dl(side) { return '<dl>' + rows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + r[side] + '</dd>'; }).join('') + '</dl>'; }
     var bf = B.funnel;
@@ -1499,8 +1514,8 @@ td.dim { color: var(--dim); }
       '<dt>Conversão geral</dt><dd>' + rateTxt(I.funnel.conversionRate) + '</dd></dl></div>';
     setHTML($('cmp'), sem + com);
     $('cmp-kpis').innerHTML =
-      kpi('Vendas adicionais', signedQty(c.extraSales), 'por mês · ' + signedQty(c.extraLeads) + ' leads estimados', c.extraSales >= 0 ? 'pos' : 'neg') +
-      kpi('Faturamento extra', signedMoney(c.incrementalRevenue), 'por mês', c.incrementalRevenue >= 0 ? 'pos' : 'neg') +
+      kpi('Vendas adicionais', signedQty(W.extraSales), 'por mês · ' + signedQty(c.extraLeads) + ' leads estimados' + (model.total.active ? ' · inclui ' + qty(model.total.leverSales) + ' das alavancas' : ''), W.extraSales >= 0 ? 'pos' : 'neg') +
+      kpi('Faturamento extra', signedMoney(W.incrementalRevenue), model.total.active ? 'por mês · inclui ' + money0(model.total.leverRevenue) + ' das alavancas' + (model.total.month > 1 ? ' (a partir do mês ' + model.total.month + ')' : '') : 'por mês', W.incrementalRevenue >= 0 ? 'pos' : 'neg') +
       kpi('Redução do CPL', money(c.cplReduction), c.cplReductionPct === null ? '—' : pct(c.cplReductionPct, 0) + ' menor nas campanhas de contatos', c.cplReduction >= 0 ? 'pos' : 'neg') +
       kpi('Ganho de eficiência comercial', c.conversionRelativePct === null ? '—' : (c.conversionRelativePct > 0 ? '+' : '') + pct(c.conversionRelativePct, 0),
         rateTxt(c.conversionBase) + ' → ' + rateTxt(c.conversionImproved) + ' de conversão geral (' + (c.conversionDeltaPP >= 0 ? '+' : '') + nf(1, 1).format(c.conversionDeltaPP) + ' p.p.)', c.conversionDeltaPP >= 0 ? 'pos' : 'neg');
@@ -1683,18 +1698,10 @@ td.dim { color: var(--dim); }
     $('cons').innerHTML = block('Resultado mensal atual (mês 1)', L.now) + block('Mensal após maturação' + (L.maturationMonth > 1 ? ' (mês ' + L.maturationMonth + ')' : ''), L.mature) + acc;
   }
 
-  // Linha "com alavancas": mês após a maturação, sem misturar no ROAS dos anúncios
-  function leverPlus() {
-    var M = model.levers.mature;
-    if (!(M.leverSales > 0)) return null;
-    var cost = model.investment + M.leverCosts, mm = model.levers.maturationMonth;
-    return { month: mm, revenue: M.totalRevenue, sales: M.totalSales, ret: cost > 0 ? M.totalRevenue / cost : null,
-      text: 'Com alavancas, ' + (mm > 1 ? 'a partir do mês ' + mm : 'desde o mês 1') + ': ' };
-  }
-  function leverPlusHTML(cls) {
-    var x = leverPlus(); if (!x) return '';
-    return '<div class="' + cls + '">' + x.text + '<b>' + money0(x.revenue) + '/mês</b> · ' + qty(x.sales) + ' vendas · retorno total <b>' + xr(x.ret) + '</b>' +
-      tip('Faturamento dos anúncios + alavancas ÷ (investimento em anúncios + custos das alavancas). O ROAS acima continua contando só os anúncios.') + '</div>';
+  // Detalhe "anúncios + alavancas" exibido sob os totais quando há alavanca ativa
+  function leverBreak(adRev, adSales) {
+    var T = model.total; if (!T.active) return '';
+    return money0(adRev) + ' anúncios + ' + money0(T.leverRevenue) + ' alavancas (' + qty(adSales) + ' + ' + qty(T.leverSales) + ' vendas)' + (T.month > 1 ? ', a partir do mês ' + T.month : '');
   }
 
   // ------------------------------------------------------------ visualização simplificada
@@ -1704,21 +1711,22 @@ td.dim { color: var(--dim); }
     setPressed('seg-view', 'data-view', simple ? 'simple' : 'full');
     setPressed('seg-months-simple', 'data-months', sim.projection.months === 12 ? 12 : 6);
     if (!simple) return;
-    var f = model.funnel, fi = model.financial, c = model.compare, T = model.projection.totals, P = model.projection;
+    var f = model.funnel, fi = model.financial, c = model.compare, T = model.projection.totals, P = model.projection, TT = model.total, W = c.withLevers;
     $('simple-sub').textContent = 'Cenário ' + model.scenario.name + ' · investimento de ' + money(model.investment) + (sim.mode === 'reverse' ? ' (mínimo para a meta)' : '') + ' · ticket de ' + money(model.ticket);
     $('simple-main').innerHTML =
-      '<div class="hero"><div class="k">Faturamento projetado</div><div class="big">' + money(fi.adRevenue) + '</div>' +
-      '<div class="s">' + qty(f.sales) + ' ' + plural(f.sales, 'venda', 'vendas') + ' por mês · ROAS dos anúncios de ' + xr(fi.roas) + '</div>' + leverPlusHTML('hero-plus') + '</div>' +
+      '<div class="hero"><div class="k">Faturamento projetado' + (TT.active ? ' com alavancas' : '') + '</div><div class="big">' + money(TT.revenue) + '</div>' +
+      '<div class="s">' + qty(TT.sales) + ' ' + plural(TT.sales, 'venda', 'vendas') + ' por mês · ' + (TT.active ? 'ROAS total de ' + xr(TT.totalReturn) + ' (anúncios: ' + xr(fi.roas) + ')' : 'ROAS de ' + xr(fi.roas)) + '</div>' +
+      (TT.active ? '<div class="hero-plus">' + leverBreak(fi.adRevenue, f.sales) + '</div>' : '') + '</div>' +
       '<div class="flow">' +
       kpi('Seguidores', qty(f.followers), 'novos por mês') +
       kpi('Leads', qty(f.leads), 'contatos recebidos') +
       kpi('Qualificados', qty(f.qualified), rateTxt(f.qualificationRate) + ' dos leads') +
-      kpi('Vendas', qty(f.sales), rateTxt(f.closeRate) + ' de fechamento', 'gold') + '</div>' +
+      kpi('Vendas', qty(TT.sales), TT.active ? qty(f.sales) + ' anúncios + ' + qty(TT.leverSales) + ' alavancas' : rateTxt(f.closeRate) + ' de fechamento', 'gold') + '</div>' +
       '<div class="simple-foot"><span>Custo por venda <b>' + (fi.costPerSale === null ? '—' : money(fi.costPerSale)) + '</b></span><span>CPL <b>' + money(f.cpl) + '</b></span><span>Conversão geral <b>' + rateTxt(f.conversionRate) + '</b></span></div>';
     $('simple-cmp').innerHTML = '<div class="vs">' +
       '<div class="side"><h3>Sem Método TDE</h3><div class="big">' + money(c.base.fin.adRevenue) + '</div><div class="s">' + qty(c.base.funnel.sales) + ' ' + plural(c.base.funnel.sales, 'venda', 'vendas') + ' · ROAS ' + xr(c.base.fin.roas) + '</div></div>' +
-      '<div class="side com"><h3>Com Método TDE · ' + esc(model.scenario.name) + '</h3><div class="big">' + money(c.improved.fin.adRevenue) + '</div><div class="s">' + qty(c.improved.funnel.sales) + ' ' + plural(c.improved.funnel.sales, 'venda', 'vendas') + ' · ROAS ' + xr(c.improved.fin.roas) + '</div></div></div>' +
-      '<div class="gain">' + kpi('Faturamento extra por mês', signedMoney(c.incrementalRevenue), signedQty(c.extraSales) + ' vendas', c.incrementalRevenue >= 0 ? 'pos' : 'neg') +
+      '<div class="side com"><h3>Com Método TDE · ' + esc(model.scenario.name) + '</h3><div class="big">' + money(W.improvedRevenue) + '</div><div class="s">' + qty(W.improvedSales) + ' ' + plural(W.improvedSales, 'venda', 'vendas') + ' · ' + (TT.active ? 'ROAS total ' : 'ROAS ') + xr(W.improvedReturn) + (TT.active ? ' · inclui alavancas' : '') + '</div></div></div>' +
+      '<div class="gain">' + kpi('Faturamento extra por mês', signedMoney(W.incrementalRevenue), signedQty(W.extraSales) + ' vendas' + (TT.active ? ' · inclui ' + money0(TT.leverRevenue) + ' das alavancas' : ''), W.incrementalRevenue >= 0 ? 'pos' : 'neg') +
       kpi('Ganho de eficiência comercial', c.conversionRelativePct === null ? '—' : (c.conversionRelativePct > 0 ? '+' : '') + pct(c.conversionRelativePct, 0), rateTxt(c.conversionBase) + ' → ' + rateTxt(c.conversionImproved) + ' de conversão', c.conversionDeltaPP >= 0 ? 'pos' : 'neg') + '</div>';
     var sl = model.levers.list.map(function (l) {
       var on = !!sim.leversEnabled[l.id], mat = Math.round(l.maturationMonths);
@@ -2017,11 +2025,11 @@ td.dim { color: var(--dim); }
     lines.push('');
     lines.push('*Audiência:* ' + qty(f.followers) + ' novos seguidores por mês');
     lines.push('*Funil mensal:* ' + qty(f.leads) + ' leads → ' + qty(f.qualified) + ' qualificados → ' + qty(f.sales) + ' vendas');
-    lines.push('Faturamento: ' + money(fi.adRevenue) + ' · ROAS hipotético: ' + xr(fi.roas));
+    lines.push('Faturamento: ' + money(m.total.revenue) + (m.total.active ? ' (com alavancas; anúncios ' + money(fi.adRevenue) + ')' : '') + ' · ROAS ' + (m.total.active ? 'total ' + xr(m.total.totalReturn) : xr(fi.roas)));
     lines.push('');
     lines.push('*Sem Método TDE:* ' + qty(c.base.funnel.sales) + ' vendas · ' + money(c.base.fin.adRevenue));
-    lines.push('*Com Método TDE (' + m.scenario.name + '):* ' + qty(c.improved.funnel.sales) + ' vendas · ' + money(c.improved.fin.adRevenue));
-    lines.push('Diferença: ' + signedQty(c.extraSales) + ' vendas e ' + signedMoney(c.incrementalRevenue) + ' por mês');
+    lines.push('*Com Método TDE (' + m.scenario.name + '):* ' + qty(c.withLevers.improvedSales) + ' vendas · ' + money(c.withLevers.improvedRevenue) + (m.total.active ? ' (com alavancas)' : ''));
+    lines.push('Diferença: ' + signedQty(c.withLevers.extraSales) + ' vendas e ' + signedMoney(c.withLevers.incrementalRevenue) + ' por mês');
     lines.push('');
     lines.push('*Projeção de ' + P.months + ' meses:* investimento ' + money(T.investment) + ' · faturamento total ' + money(T.totalRevenue));
     var act = T.levers.filter(function (l) { return l.enabled; });
@@ -2161,7 +2169,7 @@ td.dim { color: var(--dim); }
       ['Leads recebidos: ' + qty(f.leads), qty(f.contactLeads) + ' das campanhas + ' + qty(f.extraConversations) + ' conversas da captação'],
       ['Leads qualificados: ' + qty(f.qualified), 'Qualificação de ' + rateTxt(f.qualificationRate)],
       ['Vendas realizadas: ' + qty(f.sales), 'Fechamento de ' + rateTxt(f.closeRate) + ' · conversão geral ' + rateTxt(f.conversionRate)],
-      ['Faturamento projetado: ' + money(fi.adRevenue), qty(f.sales) + ' vendas x ' + money(m.ticket)]
+      ['Faturamento projetado: ' + money(m.total.revenue), m.total.active ? money0(fi.adRevenue) + ' anúncios + ' + money0(m.total.leverRevenue) + ' alavancas (a partir do mês ' + m.total.month + ')' : qty(f.sales) + ' vendas x ' + money(m.ticket)]
     ];
     var shades = [[8, 8, 8], [60, 46, 16], [150, 112, 26], [229, 179, 53]];
     stages.forEach(function (st, i) {
@@ -2174,7 +2182,7 @@ td.dim { color: var(--dim); }
     note(y + 1, 'Cálculo com valores esperados; quantidades inteiras arredondadas apenas no final. Faturamento = vendas inteiras x ticket médio.');
     y = section(y + 12, 'Indicadores financeiros (mensal, somente anúncios)');
     y = boxes(y, [
-      ['Faturamento bruto', money(fi.adRevenue), qty(fi.adSales) + ' vendas', GDARK],
+      ['Faturamento bruto', money(m.total.revenue), m.total.active ? 'Inclui ' + money0(m.total.leverRevenue) + ' das alavancas' : qty(fi.adSales) + ' vendas', GDARK],
       ['ROAS hipotético', xr(fi.roas), 'Faturamento / investimento', GDARK],
       ['Custo por venda', fi.costPerSale === null ? 'Sem vendas' : money(fi.costPerSale), 'Investimento / vendas'],
       ['Custo por lead', money(f.costPerLead), 'Campanhas de contatos'],
@@ -2200,21 +2208,21 @@ td.dim { color: var(--dim); }
     doc.addPage(); header('Comparativo de resultados', 'Mesmo investimento (' + money(m.investment) + ') e ticket');
     y = section(46, 'Sem Método TDE x Com Método TDE (' + m.scenario.name + ')');
     function dd(a, b, fmt) { var d = b - a; return Math.abs(d) < 1e-9 ? '0' : (d > 0 ? '+' : '') + fmt(d) + (a > 0 ? ' (' + (d > 0 ? '+' : '') + pct(d / a * 100, 0) + ')' : ''); }
-    var B = c.base, I = c.improved;
+    var B = c.base, I = c.improved, W = c.withLevers;
     y = table(15, y, [{ h: 'Métrica', w: 54, align: 'left' }, { h: 'Sem Método TDE', w: 40 }, { h: 'Com Método TDE', w: 40 }, { h: 'Diferença', w: 46 }], [
       ['Investimento', money(B.funnel.investment), money(I.funnel.investment), '-'],
       ['CPL dos contatos', money(B.funnel.cpl), money(I.funnel.cpl), dd(B.funnel.cpl, I.funnel.cpl, money)],
       ['Leads recebidos', qty(B.funnel.leads), qty(I.funnel.leads), dd(B.funnel.leads, I.funnel.leads, qty)],
       ['Leads qualificados', qty(B.funnel.qualified), qty(I.funnel.qualified), dd(B.funnel.qualified, I.funnel.qualified, qty)],
-      ['Vendas', qty(B.funnel.sales), qty(I.funnel.sales), dd(B.funnel.sales, I.funnel.sales, qty)],
-      ['Faturamento', money(B.fin.adRevenue), money(I.fin.adRevenue), dd(B.fin.adRevenue, I.fin.adRevenue, money)],
-      ['ROAS', xr(B.fin.roas), xr(I.fin.roas), c.roasDelta === null ? '-' : (c.roasDelta > 0 ? '+' : '') + nf(2, 2).format(c.roasDelta) + 'x'],
+      ['Vendas' + (m.total.active ? ' (com alavancas)' : ''), qty(B.funnel.sales), qty(W.improvedSales), dd(B.funnel.sales, W.improvedSales, qty)],
+      ['Faturamento' + (m.total.active ? ' (com alavancas)' : ''), money(B.fin.adRevenue), money(W.improvedRevenue), dd(B.fin.adRevenue, W.improvedRevenue, money)],
+      [m.total.active ? 'ROAS total' : 'ROAS', xr(B.fin.roas), xr(W.improvedReturn), (W.improvedReturn !== null && B.fin.roas !== null) ? (W.improvedReturn - B.fin.roas > 0 ? '+' : '') + nf(2, 2).format(W.improvedReturn - B.fin.roas) + 'x' : '-'],
       ['Conversão geral', rateTxt(c.conversionBase), rateTxt(c.conversionImproved), (c.conversionDeltaPP >= 0 ? '+' : '') + nf(1, 1).format(c.conversionDeltaPP) + ' p.p.']
     ], { rh: 7.6 });
     y += 7;
     y = boxes(y, [
-      ['Vendas adicionais', signedQty(c.extraSales), 'por mês', GDARK],
-      ['Faturamento extra', signedMoney(c.incrementalRevenue), 'por mês', GDARK],
+      ['Vendas adicionais', signedQty(W.extraSales), m.total.active ? 'por mês, com alavancas' : 'por mês', GDARK],
+      ['Faturamento extra', signedMoney(W.incrementalRevenue), m.total.active ? 'por mês, inclui ' + money0(m.total.leverRevenue) + ' das alavancas' : 'por mês', GDARK],
       ['Redução do CPL', money(c.cplReduction), c.cplReductionPct === null ? '' : pct(c.cplReductionPct, 0) + ' menor', GDARK],
       ['Ganho de eficiência comercial', c.conversionRelativePct === null ? '-' : (c.conversionRelativePct > 0 ? '+' : '') + pct(c.conversionRelativePct, 0), rateTxt(c.conversionBase) + ' > ' + rateTxt(c.conversionImproved) + ' de conversão', GDARK]
     ], 2, 89, 24, 2);
